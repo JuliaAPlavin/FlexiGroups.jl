@@ -44,9 +44,10 @@ end
     using Dictionaries
 
     xs = 3 .* [1, 2, 3, 4, 5]
-    @test @inferred(groupmap(isodd, length, xs)) == dictionary([true => 3, false => 2])
-    @test @inferred(groupmap(isodd, first, xs)) == dictionary([true => 3, false => 6])
-    @test @inferred(groupmap(isodd, last, xs)) == dictionary([true => 15, false => 12])
+    for f in [length, first, last]
+        @test @inferred(groupmap(isodd, f, xs)) == map(f, group(isodd, xs))
+    end
+    @test all(@inferred(groupmap(isodd, rand, xs)) .∈ group(isodd, xs))
     @test_throws "exactly one element" groupmap(isodd, only, xs)
     @test @inferred(groupmap(isodd, only, [10, 11])) == dictionary([false => 10, true => 11])
 end

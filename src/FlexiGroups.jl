@@ -59,6 +59,14 @@ function groupmap(f, ::typeof(only), X; kwargs...)
     end
 end
 
+function groupmap(f, ::typeof(rand), X; kwargs...)
+    (; dct, starts, rperm) = _group_core(f, X, keys(X); kwargs...)
+    mapvalues(dct) do gid
+        ix = rperm[rand(starts[gid + 1]:-1:1 + starts[gid])]
+        X[ix]
+    end
+end
+
 _group_core(f, X, vals; dicttype=Dictionary) = _group_core(f, X, vals, dicttype)
 
 function _group_core(f, X::AbstractArray, vals::AbstractArray, ::Type{DT}) where {DT}
