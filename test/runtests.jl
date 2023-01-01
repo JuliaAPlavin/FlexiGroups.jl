@@ -138,6 +138,23 @@ end
     @test g[false](a=6) == 2
 end
 
+@testitem "offsetarrays" begin
+    using Dictionaries
+    using OffsetArrays
+
+    xs = OffsetArray(1:5, 10)
+    g = @inferred group(isodd, xs)
+    @test g::Dictionary{Bool, <:AbstractVector{Int}} == dictionary([true => [1, 3, 5], false => [2, 4]])
+    @test isconcretetype(eltype(g))
+
+    g = @inferred groupview(isodd, xs)
+    @test g::Dictionary{Bool, <:AbstractVector{Int}} == dictionary([true => [1, 3, 5], false => [2, 4]])
+    @test isconcretetype(eltype(g))
+
+    g = @inferred groupmap(isodd, length, xs)
+    @test g::Dictionary{Bool, Int} == dictionary([true => 3, false => 2])
+end
+
 @testitem "pooledarray" begin
     using PooledArrays
     using StructArrays

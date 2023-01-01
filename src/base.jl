@@ -66,9 +66,9 @@ _group_core(f, X, vals; dicttype=Dictionary) = _group_core(f, X, vals, dicttype)
 
 function _group_core(f, X::AbstractArray, vals::AbstractArray, ::Type{DT}) where {DT}
     ngroups = 0
-    groups = similar(X, Int)
+    groups = Vector{Int}(undef, length(X))
     dct = DT{Core.Compiler.return_type(f, Tuple{_valtype(X)}), Int}()
-    @inbounds for (i, x) in pairs(X)
+    @inbounds for (i, x) in enumerate(X)
         groups[i] = gid = get!(dct, f(x), ngroups + 1)
         if gid == ngroups + 1
             ngroups += 1
