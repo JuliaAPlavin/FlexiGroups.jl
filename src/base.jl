@@ -213,7 +213,6 @@ function _group_core_identity(X, vals, ::Type{DT}, length::Integer, categorical:
     @inbounds for (i, x) in enumerate(X)
         groups[i] = dct[DataAPI.unwrap(x)]
     end
-    @show X dct groups
 
     starts = zeros(Int, ngroups)
     @inbounds for gid in groups
