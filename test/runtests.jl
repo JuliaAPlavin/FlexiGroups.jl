@@ -138,6 +138,19 @@ end
     @test g[false](a=6) == 2
 end
 
+@testitem "pooledarray" begin
+    using PooledArrays
+    using StructArrays
+    using Dictionaries
+
+    xs = PooledArray([i for i in 1:255], UInt8)
+    @test groupmap(isodd, length, xs) == dictionary([true => 128, false => 127])
+
+    sa = StructArray(a=PooledArray(repeat(1:255, outer=100), UInt8), b=1:255*100)
+    @test all(==(100), groupmap(x -> x.a, length, sa))
+    @test groupmap(x -> x.b, length, sa)
+end
+
 @testitem "typedtable" begin
     using Dictionaries
     using TypedTables

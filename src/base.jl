@@ -21,7 +21,9 @@ function group(f, X; kwargs...)
 end
 
 function groupmap(f, ::typeof(length), X; kwargs...)
-    (; dct, starts, rperm) = _group_core(f, X, similar(X, Nothing); kwargs...)
+    vals = similar(X, Nothing)
+    fill!(vals, nothing)
+    (; dct, starts, rperm) = _group_core(f, X, vals; kwargs...)
     mapvalues(dct) do gid
         starts[gid + 1] - starts[gid]
     end
