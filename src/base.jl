@@ -117,6 +117,7 @@ _group_core_identity(X, vals, dicttype, length) =
         Val(!isempty(X) && nameof(eltype(X)) === :CategoricalValue && nameof(parentmodule(eltype(X))) === :CategoricalArrays)
     )
 
+# Bool group keys: fastpath for performance
 function _group_core_identity(X::AbstractArray{Bool}, vals, ::Type{AbstractDictionary}, length::Integer)
     ngroups = 0
     true_first = isempty(X) ? false : first(X)
