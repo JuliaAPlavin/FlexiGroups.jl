@@ -12,6 +12,11 @@ using TestItemRunner
     @test isconcretetype(eltype(g))
     @test valtype(g) <: SubArray{Int}
 
+    @test group(isodd, [1, 3, 5]) == dictionary([true => [1, 3, 5]])
+    @test group(Int ∘ isodd, [1, 3, 5]) == dictionary([1 => [1, 3, 5]])
+    @test group(isodd, Int[]) == dictionary([])
+    @test group(Int ∘ isodd, Int[]) == dictionary([])
+
     # ensure we get a copy
     xs[1] = 123
     @test g == dictionary([true => [3, 9, 15], false => [6, 12]])
@@ -129,11 +134,11 @@ end
 @testitem "dicttypes" begin
     using Dictionaries
 
-    @testset for D in [Dict, Dictionary, UnorderedDictionary, ArrayDictionary]
-        @test group(isodd, 3 .* [1, 2, 3, 4, 5]; restype=D) |> pairs |> Dict == Dict(false => [6, 12], true => [3, 9, 15])
-        @test group(isodd, (3x for x in [1, 2, 3, 4, 5]); restype=D) |> pairs |> Dict == Dict(false => [6, 12], true => [3, 9, 15])
-        @test @inferred(FlexiGroups._group(isodd, 3 .* [1, 2, 3, 4, 5], D)) == group(isodd, 3 .* [1, 2, 3, 4, 5]; restype=D)
-        @test @inferred(FlexiGroups._group(isodd, (3x for x in [1, 2, 3, 4, 5]), D)) == group(isodd, (3x for x in [1, 2, 3, 4, 5]); restype=D)
+    @testset for D in [Dict, Dictionary, UnorderedDictionary, ArrayDictionary, AbstractDict, AbstractDictionary]
+        @test group(isodd, 3 .* [1, 2, 3, 4, 5]; restype=D)::D |> pairs |> Dict == Dict(false => [6, 12], true => [3, 9, 15])
+        @test group(isodd, (3x for x in [1, 2, 3, 4, 5]); restype=D)::D |> pairs |> Dict == Dict(false => [6, 12], true => [3, 9, 15])
+        @test @inferred(FlexiGroups._group(isodd, 3 .* [1, 2, 3, 4, 5], D))::D == group(isodd, 3 .* [1, 2, 3, 4, 5]; restype=D)
+        @test @inferred(FlexiGroups._group(isodd, (3x for x in [1, 2, 3, 4, 5]), D))::D == group(isodd, (3x for x in [1, 2, 3, 4, 5]); restype=D)
     end
 end
 
@@ -177,15 +182,15 @@ end
 
     xs = OffsetArray(1:5, 10)
     g = @inferred group(isodd, xs)
-    @test g::Dictionary{Bool, <:AbstractVector{Int}} == dictionary([true => [1, 3, 5], false => [2, 4]])
+    @test g::AbstractDictionary{Bool, <:AbstractVector{Int}} == dictionary([true => [1, 3, 5], false => [2, 4]])
     @test isconcretetype(eltype(g))
 
     g = @inferred groupview(isodd, xs)
-    @test g::Dictionary{Bool, <:AbstractVector{Int}} == dictionary([true => [1, 3, 5], false => [2, 4]])
+    @test g::AbstractDictionary{Bool, <:AbstractVector{Int}} == dictionary([true => [1, 3, 5], false => [2, 4]])
     @test isconcretetype(eltype(g))
 
     g = @inferred groupmap(isodd, length, xs)
-    @test g::Dictionary{Bool, Int} == dictionary([true => 3, false => 2])
+    @test g::AbstractDictionary{Bool, Int} == dictionary([true => 3, false => 2])
 end
 
 @testitem "pooledarray" begin
@@ -266,15 +271,15 @@ end
 
     g = group(isodd, skip(isnothing, [1., 2, nothing, 3]))
     @test g == dictionary([true => [1, 3], false => [2]])
-    @test g isa Dictionary{Bool, <:SubArray{Float64}}
+    @test g isa AbstractDictionary{Bool, <:SubArray{Float64}}
 
     g = group(isodd, skip(isnan, [1, 2, NaN, 3]))
     @test g == dictionary([true => [1, 3], false => [2]])
-    @test g isa Dictionary{Bool, <:SubArray{Float64}}
+    @test g isa AbstractDictionary{Bool, <:SubArray{Float64}}
 
     g = groupfind(isodd, skip(isnan, [1, 2, NaN, 3]))
     @test g == dictionary([true => [1, 4], false => [2]])
-    @test g isa Dictionary{Bool, <:SubArray{Int}}
+    @test g isa AbstractDictionary{Bool, <:SubArray{Int}}
 end
 
 @testitem "_" begin
