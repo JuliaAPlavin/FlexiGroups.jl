@@ -102,6 +102,16 @@ end
     @test valtype(gm) == Int
 end
 
+@testitem "reassemble" begin
+    using FlexiMaps
+
+    xs = 3 .* [1, 2, 3, 4, 5]
+    g = groupview(isodd, xs)
+    gm = flatmap_parent(g -> g ./ sum(g), g)
+    @test gm == [1/9, 1/3, 1/3, 2/3, 5/9]
+    @test_throws "must be covered" flatmap_parent(g -> g ./ sum(g), filter(g -> length(g) > 2, g))
+end
+
 @testitem "to keyedarray" begin
     using AxisKeys
 
