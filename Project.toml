@@ -4,3 +4,8 @@ authors = ["Alexander Plavin <alexander@plav.in>"]
 version = "0.1.0"
 
 [deps]
+Dictionaries = "85a47980-9c8c-11e8-2b9f-f7ca1fa99fb4"
+
+[compat]
+Dictionaries = "0.3.24"
+julia = "1.6"
