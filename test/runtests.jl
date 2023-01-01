@@ -204,6 +204,29 @@ end
     @test g == dictionary([true => [1, 3, 5], false => [123, 4]])
 end
 
+@testitem "staticarray" begin
+    using Dictionaries
+    using StaticArrays
+
+    xs = SVector{5}(3 .* [1, 2, 3, 4, 5])
+    g = @inferred group(isodd, xs)
+    @test g == dictionary([true => [3, 9, 15], false => [6, 12]])
+    @test isconcretetype(eltype(g))
+    @test eltype(g) <: SubArray{Int}
+    @test g[false] == [6, 12]
+end
+
+# @testitem "distributedarray" begin
+#     using DistributedArrays
+#     DistributedArrays.allowscalar(true)
+
+#     xs = distribute(3 .* [1, 2, 3, 4, 5])
+#     g = @inferred group(isodd, xs)
+#     @test g == dictionary([true => [1, 3, 5], false => [2, 4]])
+#     @test isconcretetype(eltype(g))
+#     @test g[false] == [2, 4]
+# end
+
 @testitem "skipper" begin
     using Skipper
     using Dictionaries
