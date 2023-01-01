@@ -40,6 +40,18 @@ using TestItemRunner
     @test valtype(g) <: SubArray{Union{Nothing, Int}}
 end
 
+@testitem "groupmap" begin
+    using Dictionaries
+
+    xs = 3 .* [1, 2, 3, 4, 5]
+    for f in [length, first, last]
+        @test @inferred(groupmap(isodd, f, xs)) == map(f, group(isodd, xs))
+    end
+    @test all(@inferred(groupmap(isodd, rand, xs)) .∈ group(isodd, xs))
+    @test_throws "exactly one element" groupmap(isodd, only, xs)
+    @test @inferred(groupmap(isodd, only, [10, 11])) == dictionary([false => 10, true => 11])
+end
+
 @testitem "margins" begin
     using FlexiGroups: addmargins
     using Dictionaries
@@ -83,18 +95,6 @@ end
     ])
     @test keytype(gm) isa Union  # of NamedTuples
     @test valtype(gm) == Int
-end
-
-@testitem "groupmap" begin
-    using Dictionaries
-
-    xs = 3 .* [1, 2, 3, 4, 5]
-    for f in [length, first, last]
-        @test @inferred(groupmap(isodd, f, xs)) == map(f, group(isodd, xs))
-    end
-    @test all(@inferred(groupmap(isodd, rand, xs)) .∈ group(isodd, xs))
-    @test_throws "exactly one element" groupmap(isodd, only, xs)
-    @test @inferred(groupmap(isodd, only, [10, 11])) == dictionary([false => 10, true => 11])
 end
 
 @testitem "iterators" begin
