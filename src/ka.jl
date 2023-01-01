@@ -1,3 +1,5 @@
+using .AxisKeys
+
 for f in (:_group, :_groupview, :_groupfind)
     @eval function $f(f, xs, ::Type{TA}; default=undef) where {TA <: AbstractArray}
         gd = $f(f, xs, Dictionary)
@@ -10,8 +12,7 @@ function _groupmap(f, mapf, xs, ::Type{TA}; default=undef) where {TA <: Abstract
     _group_dict_to_ka(gd, default, TA)
 end
 
-@generated function _group_dict_to_ka(gd::Dictionary{K, V}, default::D, ::Type{TA}) where {K, V, D, TA}
-    @assert nameof(TA) == :KeyedArray
+@generated function _group_dict_to_ka(gd::Dictionary{K, V}, default::D, ::Type{KeyedArray}) where {K, V, D}
     axkeys_exprs = map(fieldnames(K)) do n
         col = :( map(Accessors.PropertyLens{$(QuoteNode(n))}(), keys(gd).values) |> unique |> sort )
     end
@@ -33,7 +34,7 @@ end
             data[ixs...] = v
         end
 
-        A = $TA(data; axkeys...)
+        A = KeyedArray(data; axkeys...)
 
         return A
     end
