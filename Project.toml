@@ -4,8 +4,14 @@ authors = ["Alexander Plavin <alexander@plav.in>"]
 version = "0.1.0"
 
 [deps]
+Combinatorics = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
+DataPipes = "02685ad9-2d12-40c3-9f73-c6aeda6a7ff5"
 Dictionaries = "85a47980-9c8c-11e8-2b9f-f7ca1fa99fb4"
+FilterMaps = "6394faf6-06db-4fa8-b750-35ccc60383f7"
 
 [compat]
+Combinatorics = "1.0.2"
+DataPipes = "0.3.0"
 Dictionaries = "0.3.24"
+FilterMaps = "0.1.0"
 julia = "1.6"
