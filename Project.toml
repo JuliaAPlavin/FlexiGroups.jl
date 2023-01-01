@@ -1,7 +1,7 @@
 name = "FlexiGroups"
 uuid = "1e56b746-2900-429a-8028-5ec1f00612ec"
 authors = ["Alexander Plavin <alexander@plav.in>"]
-version = "0.1.8"
+version = "0.1.9"
 
 [deps]
 Combinatorics = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"

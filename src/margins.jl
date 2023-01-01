@@ -41,9 +41,9 @@ Base.show(io::IO, ::MarginKey) = print(io, "total")
     end
     quote
         KT = Union{$K, $(KTs...)}
-        VT = Core.Compiler.return_type(combine, Tuple{Tuple{$V}})
+        VT = Core.Compiler.return_type(combine, Tuple{Vector{$V}})
         res = Dictionary{KT, VT}()
-        merge!(res, map(combine ∘ tuple, dict))
+        merge!(res, map(combine ∘ Base.vect, dict))
         $(dictexprs...)
     end
 end
@@ -52,7 +52,7 @@ function addmargins(dict::Dictionary{K, V}; combine=flatten, marginkey=total) wh
     KT = Union{K, typeof(marginkey)}
     VT = Core.Compiler.return_type(combine, Tuple{Tuple{V}})
     res = Dictionary{KT, VT}()
-    merge!(res, map(combine ∘ tuple, dict))
+    merge!(res, map(combine ∘ Base.vect, dict))
     merge!(res, _combine_groups_by(Returns(marginkey), dict, combine))
 end
 
