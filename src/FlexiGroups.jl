@@ -2,7 +2,7 @@ module FlexiGroups
 
 using Dictionaries
 using Combinatorics: combinations
-using FilterMaps: flatmap
+using FlexiMaps: flatmap
 using DataPipes
 
 export group, groupview, groupfind, groupmap
