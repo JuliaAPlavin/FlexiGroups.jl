@@ -168,6 +168,26 @@ end
     @test g[false].a == [6, 12]
 end
 
+@testitem "categoricalarray" begin
+    using Dictionaries
+    using StructArrays
+    using CategoricalArrays
+
+    a = CategoricalArray(["a", "a", "b", "c"])[1:3]
+    @test groupmap(length, a) == dictionary(["a" => 2, "b" => 1, "c" => 0])
+
+    # empty with categorical values: works, but returns empty dict, same as without categoricalvalues
+    @test groupmap(length, a[1:0]) == dictionary([])
+    # should return zero counts for all levels, but how to get levels in code?..
+    @test_broken groupmap(length, a[1:0]) == dictionary(["a" => 0, "b" => 0, "c" => 0])
+
+    @test_broken @inferred(group(a))
+    xs = StructArray(; a)
+    @test groupmap(x -> x.a, length, xs) == dictionary(["a" => 2, "b" => 1, "c" => 0])
+    xs = [(; a) for a in a]
+    @test groupmap(x -> x.a, length, xs) == dictionary(["a" => 2, "b" => 1, "c" => 0])
+end
+
 @testitem "keyedarray" begin
     using Dictionaries
     using AxisKeys
