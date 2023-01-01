@@ -2,7 +2,7 @@ module FlexiGroups
 
 using Dictionaries
 using Combinatorics: combinations
-using FlexiMaps: flatten, mapview, _eltype
+using FlexiMaps: flatten, mapview, _eltype, Accessors
 using DataPipes
 
 export group, groupview, groupfind, groupmap
@@ -10,6 +10,10 @@ export group, groupview, groupfind, groupmap
 include("base.jl")
 include("margins.jl")
 
+using Requires
+function __init__()
+    @require AxisKeys = "94b1ba4f-4ee9-5380-92f1-94cde586c3c5" include("ka.jl")
+end
 
 
 mapvalues(f, dict::AbstractDictionary) = map(f, dict)

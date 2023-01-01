@@ -97,6 +97,16 @@ end
     @test valtype(gm) == Int
 end
 
+@testitem "to keyedarray" begin
+    using AxisKeys
+
+    xs = 3 .* [1, 2, 3, 4, 5]
+    g = @inferred groupka(x -> (a=isodd(x),), xs)
+    @test g == KeyedArray([[6, 12], [3, 9, 15]]; a=[false, true])
+    # gm = @inferred addmargins(g)
+    # @test g == KeyedArray([[6, 12], [3, 9, 15]]; a=[false, true])
+end
+
 @testitem "iterators" begin
     using Dictionaries
 
