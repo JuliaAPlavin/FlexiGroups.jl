@@ -49,7 +49,7 @@ end
     g = @inferred group(x -> x, xs)
     @test map(length, g) == dictionary([(a=1, b=:x) => 1, (a=2, b=:x) => 1, (a=2, b=:y) => 1, (a=3, b=:x) => 3])
 
-    gm = addmargins(g)
+    gm = @inferred addmargins(g)
     @test map(length, gm) == dictionary([
         (a=1, b=:x) => 1, (a=2, b=:x) => 1, (a=2, b=:y) => 1, (a=3, b=:x) => 3,
         (a=1, b=:) => 1, (a=2, b=:) => 2, (a=3, b=:) => 3,
@@ -61,7 +61,7 @@ end
     @test valtype(gm) == Vector{NamedTuple{(:a, :b), Tuple{Int64, Symbol}}}
 
     g = @inferred group(x -> x, StructArray(xs))
-    gm = addmargins(g)
+    gm = @inferred addmargins(g)
     @test map(length, gm) == dictionary([
         (a=1, b=:x) => 1, (a=2, b=:x) => 1, (a=2, b=:y) => 1, (a=3, b=:x) => 3,
         (a=1, b=:) => 1, (a=2, b=:) => 2, (a=3, b=:) => 3,
@@ -69,8 +69,20 @@ end
         (a=:, b=:) => 6,
     ])
     @test keytype(gm) isa Union  # of NamedTuples
-    @test_broken valtype(gm) |> isconcretetype  # https://github.com/JuliaArrays/StructArrays.jl/issues/247
-    @test valtype(gm) == StructVector{NamedTuple{(:a, :b), Tuple{Int64, Symbol}}}
+    @test valtype(gm) |> isconcretetype
+    @test valtype(gm) <: StructVector{NamedTuple{(:a, :b), Tuple{Int64, Symbol}}}
+
+
+    g = groupmap(x -> x, length, xs)
+    gm = @inferred addmargins(g; combine=sum)
+    @test gm == dictionary([
+        (a=1, b=:x) => 1, (a=2, b=:x) => 1, (a=2, b=:y) => 1, (a=3, b=:x) => 3,
+        (a=1, b=:) => 1, (a=2, b=:) => 2, (a=3, b=:) => 3,
+        (a=:, b=:x) => 5, (a=:, b=:y) => 1,
+        (a=:, b=:) => 6,
+    ])
+    @test keytype(gm) isa Union  # of NamedTuples
+    @test valtype(gm) == Int
 end
 
 @testitem "groupmap" begin
