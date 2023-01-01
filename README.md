@@ -45,9 +45,9 @@ map(length, g) == dictionary([(a=1, b=:x) => 1, (a=2, b=:x) => 1, (a=2, b=:y) =>
 gm = addmargins(g)
 map(length, gm) == dictionary([
     (a=1, b=:x) => 1, (a=2, b=:x) => 1, (a=2, b=:y) => 1, (a=3, b=:x) => 3,  # original grouping result
-    (a=1, b=:) => 1, (a=2, b=:) => 2, (a=3, b=:) => 3,  # margins for all values of a
-    (a=:, b=:x) => 5, (a=:, b=:y) => 1,  # margins for all values of b
-    (a=:, b=:) => 6,  # total
+    (a=1, b=total) => 1, (a=2, b=total) => 2, (a=3, b=total) => 3,  # margins for all values of a
+    (a=total, b=:x) => 5, (a=total, b=:y) => 1,  # margins for all values of b
+    (a=total, b=total) => 6,  # total
 ])
 ```
 
@@ -62,12 +62,12 @@ julia> x = rand(1:100, 100);
 julia> @p x |>
        groupmap(_ % 3, length) |>  # group by x % 3 and compute length of each group
        FlexiGroups.addmargins(combine=sum) |>  # append the margin - here, the total of all group lengths
-       __ ./ __[:]  # divide lengths by that total
+       __ ./ __[total]  # divide lengths by that total
 4-element Dictionaries.Dictionary{Union{Colon, Int64}, Float64}
        2 │ 0.34
        0 │ 0.33
        1 │ 0.33
- Colon() │ 1.0
+   total │ 1.0
 ```
 
 Perform per-group computations and combine into a single flat collection:
