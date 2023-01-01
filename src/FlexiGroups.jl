@@ -7,7 +7,9 @@ using DataPipes
 import DataAPI
 using Requires
 
-export group, groupview, groupfind, groupmap
+export
+    group, groupview, groupfind, groupmap,
+    addmargins, total
 
 include("base.jl")
 include("margins.jl")

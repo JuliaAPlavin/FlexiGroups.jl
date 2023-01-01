@@ -58,7 +58,6 @@ end
 end
 
 @testitem "margins" begin
-    using FlexiGroups: addmargins
     using Dictionaries
     using StructArrays
 
@@ -69,9 +68,9 @@ end
     gm = @inferred addmargins(g)
     @test map(length, gm) == dictionary([
         (a=1, b=:x) => 1, (a=2, b=:x) => 1, (a=2, b=:y) => 1, (a=3, b=:x) => 3,
-        (a=1, b=:) => 1, (a=2, b=:) => 2, (a=3, b=:) => 3,
-        (a=:, b=:x) => 5, (a=:, b=:y) => 1,
-        (a=:, b=:) => 6,
+        (a=1, b=total) => 1, (a=2, b=total) => 2, (a=3, b=total) => 3,
+        (a=total, b=:x) => 5, (a=total, b=:y) => 1,
+        (a=total, b=total) => 6,
     ])
     @test keytype(gm) isa Union  # of NamedTuples
     @test valtype(gm) |> isconcretetype
@@ -81,9 +80,9 @@ end
     gm = @inferred addmargins(g)
     @test map(length, gm) == dictionary([
         (a=1, b=:x) => 1, (a=2, b=:x) => 1, (a=2, b=:y) => 1, (a=3, b=:x) => 3,
-        (a=1, b=:) => 1, (a=2, b=:) => 2, (a=3, b=:) => 3,
-        (a=:, b=:x) => 5, (a=:, b=:y) => 1,
-        (a=:, b=:) => 6,
+        (a=1, b=total) => 1, (a=2, b=total) => 2, (a=3, b=total) => 3,
+        (a=total, b=:x) => 5, (a=total, b=:y) => 1,
+        (a=total, b=total) => 6,
     ])
     @test keytype(gm) isa Union  # of NamedTuples
     @test valtype(gm) |> isconcretetype
@@ -94,9 +93,9 @@ end
     gm = @inferred addmargins(g; combine=sum)
     @test gm == dictionary([
         (a=1, b=:x) => 1, (a=2, b=:x) => 1, (a=2, b=:y) => 1, (a=3, b=:x) => 3,
-        (a=1, b=:) => 1, (a=2, b=:) => 2, (a=3, b=:) => 3,
-        (a=:, b=:x) => 5, (a=:, b=:y) => 1,
-        (a=:, b=:) => 6,
+        (a=1, b=total) => 1, (a=2, b=total) => 2, (a=3, b=total) => 3,
+        (a=total, b=:x) => 5, (a=total, b=:y) => 1,
+        (a=total, b=total) => 6,
     ])
     @test keytype(gm) isa Union  # of NamedTuples
     @test valtype(gm) == Int
@@ -124,11 +123,11 @@ end
     @test @inferred(FlexiGroups._groupmap(x -> (a=isodd(x),), length, xs, KeyedArray)) == gl
     @test gl == map(length, g) == KeyedArray([2, 3]; a=[false, true])
 
-    gl = groupmap(x -> (a=isodd(x), b=x == 6), length, xs; restype=KeyedArray, default=-123)
-    @test gl == KeyedArray([1 1; 3 -123]; a=[false, true], b=[false, true])
+    gl = groupmap(x -> (a=isodd(x), b=x == 6), length, xs; restype=KeyedArray, default=0)
+    @test gl == KeyedArray([1 1; 3 0]; a=[false, true], b=[false, true])
 
-    # gm = @inferred addmargins(g)
-    # @test g == KeyedArray([[6, 12], [3, 9, 15]]; a=[false, true])
+    @test addmargins(g) == KeyedArray([[6, 12], [3, 9, 15], [6, 12, 3, 9, 15]]; a=[false, true, total])
+    @test addmargins(gl; combine=sum) == KeyedArray([1 1 2; 3 0 3; 4 1 5]; a=[false, true, total], b=[false, true, total])
 end
 
 @testitem "iterators" begin

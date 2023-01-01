@@ -39,3 +39,32 @@ end
         return A
     end
 end
+
+using FlexiMaps.Accessors
+
+function addmargins(A::KeyedArray; combine=flatten, marginkey=total)
+    if ndims(A) == 1
+        nak = named_axiskeys(A)
+        nak_ = @modify(only(nak)) do ax
+            Union{eltype(ax), typeof(marginkey)}[marginkey]
+        end
+        m = KeyedArray([combine(A)]; nak_...)
+        return cat(A, m; dims=1)
+    else
+        res = A
+        alldims = Tuple(1:ndims(A))
+        allones = ntuple(Returns(1), ndims(A))
+        allcolons = map(ax -> Union{eltype(ax), typeof(marginkey)}[marginkey], named_axiskeys(A))
+        for i in 1:ndims(A)
+            nak = @set allcolons[i] = named_axiskeys(res)[i]
+            m = @p let
+                eachslice(res; dims=i)
+                map(combine)
+                reshape(__, @set allones[i] = :)
+                KeyedArray(__; nak...)
+            end 
+            res = cat(res, m; dims=@delete alldims[i])
+        end
+        return res
+    end
+end
