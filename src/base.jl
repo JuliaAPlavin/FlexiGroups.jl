@@ -78,13 +78,14 @@ end
 
 _group_core(f, X::AbstractArray, vals, dicttype) = _group_core(f, X, vals, dicttype, length(X))
 _group_core(f, X, vals, dicttype) = _group_core(f, X, vals, dicttype, Base.IteratorSize(X) isa Base.SizeUnknown ? missing : length(X))
+_group_core(f, X, vals, dicttype, length) = _group_core_identity(mapview(f, X), vals, dicttype, length)
 
-function _group_core(f, X, vals, ::Type{DT}, length::Integer) where {DT}
+function _group_core_identity(X, vals, ::Type{DT}, length::Integer) where {DT}
     ngroups = 0
     groups = Vector{Int}(undef, length)
-    dct = DT{Core.Compiler.return_type(f, Tuple{_valtype(X)}), Int}()
+    dct = DT{_valtype(X), Int}()
     @inbounds for (i, x) in enumerate(X)
-        groups[i] = gid = get!(dct, f(x), ngroups + 1)
+        groups[i] = gid = get!(dct, x, ngroups + 1)
         if gid == ngroups + 1
             ngroups += 1
         end
@@ -109,12 +110,12 @@ function _group_core(f, X, vals, ::Type{DT}, length::Integer) where {DT}
     return (; dct, starts, rperm)
 end
 
-function _group_core(f, X, vals, ::Type{DT}, ::Missing) where {DT}
+function _group_core_identity(X, vals, ::Type{DT}, ::Missing) where {DT}
     ngroups = 0
     groups = Int[]
-    dct = DT{Core.Compiler.return_type(f, Tuple{_valtype(X)}), Int}()
+    dct = DT{_valtype(X), Int}()
     @inbounds for (i, x) in enumerate(X)
-        gid = get!(dct, f(x), ngroups + 1)
+        gid = get!(dct, x, ngroups + 1)
         push!(groups, gid)
         if gid == ngroups + 1
             ngroups += 1
