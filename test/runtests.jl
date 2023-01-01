@@ -165,7 +165,8 @@ end
 
     sa = StructArray(a=PooledArray(repeat(1:255, outer=100), UInt8), b=1:255*100)
     @test all(==(100), groupmap(x -> x.a, length, sa))
-    @test groupmap(x -> x.b, length, sa)
+    @test all(==(1), groupmap(x -> x.b, length, sa))
+    @test all(==(1), map(length, group(x -> (x.a, x.b), sa)))
 end
 
 @testitem "typedtable" begin
