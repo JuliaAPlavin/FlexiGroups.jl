@@ -60,7 +60,7 @@ julia> using FlexiGroups, DataPipes
 julia> x = rand(1:100, 100);
 
 julia> @p x |>
-       groupmap(x -> x % 3, length) |>  # group by x % 3 and compute length of each group
+       groupmap(_ % 3, length) |>  # group by x % 3 and compute length of each group
        FlexiGroups.addmargins(combine=sum) |>  # append the margin - here, the total of all group lengths
        __ ./ __[:]  # divide lengths by that total
 4-element Dictionaries.Dictionary{Union{Colon, Int64}, Float64}
@@ -68,6 +68,57 @@ julia> @p x |>
        0 │ 0.33
        1 │ 0.33
  Colon() │ 1.0
+```
+
+Perform per-group computations and combine into a single flat collection:
+```julia
+julia> using FlexiGroups, FlexiMaps, DataPipes, StructArrays
+
+julia> x = rand(1:100, 10)
+10-element Vector{Int64}:
+ 70
+ 57
+ 57
+ 69
+ 61
+ 74
+ 31
+ 39
+ 48
+ 96
+
+# regular flatmap: puts all elements of the first group first, then the second, and so on
+# the resulting order is different from the original `x` above
+julia> @p x |>
+       groupview(_ % 3) |>
+       flatmap(StructArray(x=_, ind_in_group=eachindex(_)))
+10-element StructArray(::Vector{Int64}, ::Vector{Int64}) with eltype NamedTuple{(:x, :ind_in_group), Tuple{Int64, Int64}}:
+ (x = 70, ind_in_group = 1)
+ (x = 61, ind_in_group = 2)
+ (x = 31, ind_in_group = 3)
+ (x = 57, ind_in_group = 1)
+ (x = 57, ind_in_group = 2)
+ (x = 69, ind_in_group = 3)
+ (x = 39, ind_in_group = 4)
+ (x = 48, ind_in_group = 5)
+ (x = 96, ind_in_group = 6)
+ (x = 74, ind_in_group = 1)
+
+# flatmap_parent: puts elements in the same order as they were in the parent `x` array above
+julia> @p x |>
+       groupview(_ % 3) |>
+       flatmap_parent(StructArray(x=_, ind_in_group=eachindex(_)))
+10-element StructArray(::Vector{Int64}, ::Vector{Int64}) with eltype NamedTuple{(:x, :ind_in_group), Tuple{Int64, Int64}}:
+ (x = 70, ind_in_group = 1)
+ (x = 57, ind_in_group = 1)
+ (x = 57, ind_in_group = 2)
+ (x = 69, ind_in_group = 3)
+ (x = 61, ind_in_group = 2)
+ (x = 74, ind_in_group = 1)
+ (x = 31, ind_in_group = 3)
+ (x = 39, ind_in_group = 4)
+ (x = 48, ind_in_group = 5)
+ (x = 96, ind_in_group = 6)
 ```
 
 Pivot tables:
@@ -105,4 +156,4 @@ And data, 3×5 Matrix{Int64}:
   - more flexibility in the return container type - various dictionaries, keyed arrays;
   - group collection type is the same as the input collection type, when possible; for example, grouping a `StructArray`s results in each group also being a `StructArray`;
   - better return eltype and type inference;
-  - groups faster and performs fewer allocations.
+  - often performs faster and with fewer allocations.
