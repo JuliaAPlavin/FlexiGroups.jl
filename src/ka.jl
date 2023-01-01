@@ -28,6 +28,7 @@ end
         end
 
         for (k, v) in pairs(gd)
+            # searchsorted relies on sort above
             ixs = map(only ∘ searchsorted, axkeys, k)
             data[ixs...] = v
         end
