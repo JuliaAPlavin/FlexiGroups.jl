@@ -103,7 +103,7 @@ end
 end
 
 @testitem "to keyedarray" begin
-    using AxisKeysExtra
+    using AxisKeys
 
     xs = 3 .* [1, 2, 3, 4, 5]
     g = group(x -> (a=isodd(x),), xs; restype=KeyedArray)

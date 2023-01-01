@@ -26,13 +26,13 @@ end
             data = similar(vals, $(Union{V, D}), sz)
             fill!(data, default)
         end
-        A = $TA(data; axkeys...)
 
         for (k, v) in pairs(gd)
-            # inds = map(AxisKeys.findindex, k, axkeys)
-            # setindex!(A, v, inds...)
-            A(:; k...) .= Ref(v)
+            ixs = map(only ∘ searchsorted, axkeys, k)
+            data[ixs...] = v
         end
+
+        A = $TA(data; axkeys...)
 
         return A
     end
