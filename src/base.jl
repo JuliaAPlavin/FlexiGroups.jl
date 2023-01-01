@@ -64,7 +64,7 @@ end
 
 _group_core(f, X, vals; dicttype=Dictionary) = _group_core(f, X, vals, dicttype)
 
-function _group_core(f, X::AbstractArray, vals::AbstractArray, ::Type{DT}) where {DT}
+function _group_core(f, X, vals, ::Type{DT}) where {DT}
     ngroups = 0
     groups = Vector{Int}(undef, length(X))
     dct = DT{Core.Compiler.return_type(f, Tuple{_valtype(X)}), Int}()
@@ -82,8 +82,7 @@ function _group_core(f, X::AbstractArray, vals::AbstractArray, ::Type{DT}) where
     cumsum!(starts, starts)
     push!(starts, length(groups))
 
-    rperm = similar(vals, Base.OneTo(length(vals)))
-    # rperm = Vector{_eltype(vals)}(undef, length(X))
+    rperm = _similar_1based(vals)
     @inbounds for (v, gid) in zip(vals, groups)
         rperm[starts[gid]] = v
         starts[gid] -= 1
@@ -95,33 +94,5 @@ function _group_core(f, X::AbstractArray, vals::AbstractArray, ::Type{DT}) where
     return (; dct, starts, rperm)
 end
 
-function _group_core(f, X, vals, ::Type{DT}) where {DT}
-    ngroups = 0
-    groups = Int[]
-    dct = DT{Core.Compiler.return_type(f, Tuple{_valtype(X)}), Int}()
-    @inbounds for x in X
-        gid = get!(dct, f(x), ngroups + 1)
-        push!(groups, gid)
-        if gid == ngroups + 1
-            ngroups += 1
-        end
-    end
-
-    starts = zeros(Int, ngroups)
-    @inbounds for gid in groups
-        starts[gid] += 1
-    end
-    cumsum!(starts, starts)
-    push!(starts, length(groups))
-
-    rperm = Vector{_eltype(vals)}(undef, length(groups))
-    @inbounds for (v, gid) in zip(vals, groups)
-        rperm[starts[gid]] = v
-        starts[gid] -= 1
-    end
-
-    # dct: key -> group_id
-    # rperm[starts[group_id + 1]:-1:1 + starts[group_id]] = group_values
-
-    return (; dct, starts, rperm)
-end
+_similar_1based(vals::AbstractArray) = similar(vals, length(vals))
+_similar_1based(vals) = Vector{_eltype(vals)}(undef, length(vals))
