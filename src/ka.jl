@@ -1,16 +1,17 @@
-function _group(f, xs, ::Type{TA}; default=undef) where {TA <: AbstractArray}
-    @assert nameof(TA) == :KeyedArray
-    gd = group(f, xs)
-    _group_dict_to_ka(gd, default, TA)
+for f in (:_group, :_groupview, :_groupfind)
+    @eval function $f(f, xs, ::Type{TA}; default=undef) where {TA <: AbstractArray}
+        gd = $f(f, xs, Dictionary)
+        _group_dict_to_ka(gd, default, TA)
+    end
 end
 
-function _groupmap(f, mapf, X, ::Type{TA}; default=undef) where {TA <: AbstractArray}
-    @assert nameof(TA) == :KeyedArray
-    gd = groupmap(f, mapf, X)
+function _groupmap(f, mapf, xs, ::Type{TA}; default=undef) where {TA <: AbstractArray}
+    gd = _groupmap(f, mapf, xs, Dictionary)
     _group_dict_to_ka(gd, default, TA)
 end
 
 @generated function _group_dict_to_ka(gd::Dictionary{K, V}, default::D, ::Type{TA}) where {K, V, D, TA}
+    @assert nameof(TA) == :KeyedArray
     axkeys_exprs = map(fieldnames(K)) do n
         col = :( map(Accessors.PropertyLens{$(QuoteNode(n))}(), keys(gd).values) |> unique |> sort )
     end

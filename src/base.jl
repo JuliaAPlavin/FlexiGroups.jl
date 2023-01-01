@@ -75,7 +75,7 @@ function _groupmap(f, ::typeof(rand), X, ::Type{RT}) where {RT <: DICTS}
     end
 end
 
-_group_core(f, X, vals; dicttype=Dictionary) = _group_core(f, X, vals, dicttype)
+
 _group_core(f, X::AbstractArray, vals, dicttype) = _group_core(f, X, vals, dicttype, length(X))
 _group_core(f, X, vals, dicttype) = _group_core(f, X, vals, dicttype, Base.IteratorSize(X) isa Base.SizeUnknown ? missing : length(X))
 
