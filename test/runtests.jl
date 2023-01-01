@@ -95,7 +95,7 @@ end
     @test valtype(g) <: SubArray{Int}
 end
 
-@testitem "dicttypes"
+@testitem "dicttypes" begin
     using Dictionaries
 
     @testset for D in [Dict, Dictionary, UnorderedDictionary, ArrayDictionary]

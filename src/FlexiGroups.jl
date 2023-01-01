@@ -26,7 +26,7 @@ function mapvalues(f, dict::Dict{K, VI}) where {K, VI}
     _setproperties(dict, (;vals=newvals))
 end
 
-function _setproperties(d::Dict{K}, patch::NamedTuple{(:vals,), Tuple{AbstractVector{V}}}) where {K,V}
+function _setproperties(d::Dict{K}, patch::NamedTuple{(:vals,), <:Tuple{AbstractVector{V}}}) where {K,V}
     @assert length(d.keys) == length(patch.vals)
     Dict{K,V}(copy(d.slots), copy(d.keys), patch.vals, d.ndel, d.count, d.age, d.idxfloor, d.maxprobe)
 end
