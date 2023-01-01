@@ -204,6 +204,15 @@ end
     @test g == dictionary([true => [1, 3, 5], false => [123, 4]])
 end
 
+@testitem "skipper" begin
+    using Skipper
+    using Dictionaries
+
+    g = group(isodd, skip(isnothing, [1., 2, nothing, 3]))
+    @test g == dictionary([true => [1, 3], false => [2]])
+    @test g isa Dictionary{Bool, <:SubArray{Float64}}
+end
+
 @testitem "_" begin
     import Aqua
     Aqua.test_all(FlexiGroups; ambiguities=false)
