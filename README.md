@@ -47,3 +47,11 @@ map(length, gm) == dictionary([
     (a=:, b=:) => 6,  # total
 ])
 ```
+
+# Alternatives
+
+- `SplitApplyCombine.jl` also provides `group` and `groupview` functions with similar basic semantics. Notable differences of `FlexiGroups` include:
+  - margins support;
+  - more flexibility in the return container type - various dictionaries, keyed arrays;
+  - group collection type is the same as the input collection type, when possible; for example, grouping a `StructArray`s results in each group also being a `StructArray`;
+  - better return eltype and type inference.
