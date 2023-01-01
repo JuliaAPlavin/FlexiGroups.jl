@@ -2,7 +2,7 @@ module FlexiGroups
 
 using Dictionaries
 using Combinatorics: combinations
-using FlexiMaps: flatmap
+using FlexiMaps: flatmap, _eltype
 using DataPipes
 
 export group, groupview, groupfind, groupmap
@@ -31,17 +31,6 @@ function _setproperties(d::Dict{K}, patch::NamedTuple{(:vals,), <:Tuple{Abstract
     Dict{K,V}(copy(d.slots), copy(d.keys), patch.vals, d.ndel, d.count, d.age, d.idxfloor, d.maxprobe)
 end
 
-
-# make eltype tighter
-_eltype(::T) where {T} = _eltype(T)
-function _eltype(::Type{T}) where {T}
-    ETb = eltype(T)
-    ETb != Any && return ETb
-    # Base.eltype returns Any for mapped/flattened/... iterators
-    # here we attempt to infer a tighter type
-    ET = Core.Compiler.return_type(first, Tuple{T})
-    ET === Union{} ? Any : ET
-end
 
 _valtype(X) = _eltype(values(X))
 
