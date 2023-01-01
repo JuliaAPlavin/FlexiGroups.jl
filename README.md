@@ -15,11 +15,11 @@ Alternatively to dictionaries, specifying `restype=KeyedArray` (from `AxisKeys.j
 ```julia
 xs = 3 .* [1, 2, 3, 4, 5]
 g = group(isodd, xs)
-g == dictionary([true => [3, 9, 15], false => [6, 12]])
+# g == dictionary([true => [3, 9, 15], false => [6, 12]]) from Dictionaries.jl
 
 
 g = group(x -> (a=isodd(x),), xs; restype=KeyedArray)
-g == KeyedArray([[6, 12], [3, 9, 15]]; a=[false, true])
+# g == KeyedArray([[6, 12], [3, 9, 15]]; a=[false, true])
 ```
 
 `groupview([keyf=identity], X; [restype=Dictionary])`: like the `group` function, but each group is a `view` of `X` and doesn't copy the input elements.
