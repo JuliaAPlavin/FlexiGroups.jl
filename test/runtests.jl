@@ -12,14 +12,20 @@ using TestItemRunner
     @test isconcretetype(eltype(g))
     @test valtype(g) <: SubArray{Int}
 
+    g = @inferred group(x -> isodd(x) ? nothing : false, xs)
+    @test g == dictionary([nothing => [3, 9, 15], false => [6, 12]])
+    @test isconcretetype(eltype(g))
+    @test valtype(g) <: SubArray{Int}
+
     @test group(isodd, [1, 3, 5]) == dictionary([true => [1, 3, 5]])
     @test group(Int ∘ isodd, [1, 3, 5]) == dictionary([1 => [1, 3, 5]])
     @test group(isodd, Int[]) == dictionary([])
     @test group(Int ∘ isodd, Int[]) == dictionary([])
 
     # ensure we get a copy
+    gc = deepcopy(g)
     xs[1] = 123
-    @test g == dictionary([true => [3, 9, 15], false => [6, 12]])
+    @test g == gc
 
 
     xs = 3 .* [1, 2, 3, 4, 5]

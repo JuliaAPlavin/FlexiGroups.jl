@@ -114,7 +114,7 @@ _group_core(f, X, vals, dicttype) = _group_core(f, X, vals, dicttype, Base.Itera
 _group_core(f, X, vals, dicttype, length) = _group_core_identity(mapview(f, X), vals, dicttype, length)
 _group_core_identity(X, vals, dicttype, length) =
     _group_core_identity(X, vals, dicttype, length,
-        Val(!isempty(X) && nameof(eltype(X)) === :CategoricalValue && nameof(parentmodule(eltype(X))) === :CategoricalArrays)
+        Val(!isempty(X) && isconcretetype(eltype(X)) && nameof(eltype(X)) === :CategoricalValue && nameof(parentmodule(eltype(X))) === :CategoricalArrays)
     )
 
 # Bool group keys: fastpath for performance
