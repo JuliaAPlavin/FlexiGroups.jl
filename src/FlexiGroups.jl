@@ -1,0 +1,3 @@
+module FlexiGroups
+
+end
