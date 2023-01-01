@@ -9,11 +9,7 @@ export group, groupview, groupfind, groupmap
 
 include("base.jl")
 include("margins.jl")
-
-using Requires
-function __init__()
-    @require AxisKeys = "94b1ba4f-4ee9-5380-92f1-94cde586c3c5" include("ka.jl")
-end
+include("ka.jl")
 
 
 mapvalues(f, dict::AbstractDictionary) = map(f, dict)

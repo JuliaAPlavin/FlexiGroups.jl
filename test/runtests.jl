@@ -98,11 +98,20 @@ end
 end
 
 @testitem "to keyedarray" begin
-    using AxisKeys
+    using AxisKeysExtra
 
     xs = 3 .* [1, 2, 3, 4, 5]
-    g = @inferred groupka(x -> (a=isodd(x),), xs)
+    g = group(x -> (a=isodd(x),), xs; restype=KeyedArray)
+    @test @inferred(FlexiGroups._group(x -> (a=isodd(x),), xs, KeyedArray)) == g
     @test g == KeyedArray([[6, 12], [3, 9, 15]]; a=[false, true])
+
+    gl = groupmap(x -> (a=isodd(x),), length, xs; restype=KeyedArray)
+    @test @inferred(FlexiGroups._groupmap(x -> (a=isodd(x),), length, xs, KeyedArray)) == gl
+    @test gl == map(length, g) == KeyedArray([2, 3]; a=[false, true])
+
+    gl = groupmap(x -> (a=isodd(x), b=x == 6), length, xs; restype=KeyedArray, default=-123)
+    @test gl == KeyedArray([1 1; 3 -123]; a=[false, true], b=[false, true])
+
     # gm = @inferred addmargins(g)
     # @test g == KeyedArray([[6, 12], [3, 9, 15]]; a=[false, true])
 end
@@ -121,8 +130,10 @@ end
     using Dictionaries
 
     @testset for D in [Dict, Dictionary, UnorderedDictionary, ArrayDictionary]
-        @test group(isodd, 3 .* [1, 2, 3, 4, 5]; dicttype=D) |> pairs |> Dict == Dict(false => [6, 12], true => [3, 9, 15])
-        @test group(isodd, (3x for x in [1, 2, 3, 4, 5]); dicttype=D) |> pairs |> Dict == Dict(false => [6, 12], true => [3, 9, 15])
+        @test group(isodd, 3 .* [1, 2, 3, 4, 5]; restype=D) |> pairs |> Dict == Dict(false => [6, 12], true => [3, 9, 15])
+        @test group(isodd, (3x for x in [1, 2, 3, 4, 5]); restype=D) |> pairs |> Dict == Dict(false => [6, 12], true => [3, 9, 15])
+        @test @inferred(FlexiGroups._group(isodd, 3 .* [1, 2, 3, 4, 5], D)) == group(isodd, 3 .* [1, 2, 3, 4, 5]; restype=D)
+        @test @inferred(FlexiGroups._group(isodd, (3x for x in [1, 2, 3, 4, 5]), D)) == group(isodd, (3x for x in [1, 2, 3, 4, 5]); restype=D)
     end
 end
 

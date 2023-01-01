@@ -1,52 +1,65 @@
-function groupfind(f, X; kwargs...)
-    (; dct, starts, rperm) = _group_core(f, X, keys(X); kwargs...)
+group(X; kwargs...) = group(identity, X; kwargs...)
+groupfind(X; kwargs...) = groupfind(identity, X; kwargs...)
+groupview(X; kwargs...) = groupview(identity, X; kwargs...)
+groupmap(mapf, X; kwargs...) = groupmap(identity, mapf, X; kwargs...)
+
+group(f, X; restype=Dictionary, kwargs...) = _group(f, X, restype; kwargs...)
+groupfind(f, X; restype=Dictionary, kwargs...) = _groupfind(f, X, restype; kwargs...)
+groupview(f, X; restype=Dictionary, kwargs...) = _groupview(f, X, restype; kwargs...)
+groupmap(f, mapf, X; restype=Dictionary, kwargs...) = _groupmap(f, mapf, X, restype; kwargs...)
+
+
+const DICTS = Union{AbstractDict, AbstractDictionary}
+
+function _groupfind(f, X, ::Type{RT}) where {RT <: DICTS}
+    (; dct, starts, rperm) = _group_core(f, X, keys(X), RT)
     mapvalues(dct) do gid
         @view rperm[starts[gid + 1]:-1:1 + starts[gid]]
     end
 end
 
-function groupview(f, X; kwargs...)
-    (; dct, starts, rperm) = _group_core(f, X, keys(X); kwargs...)
+function _groupview(f, X, ::Type{RT}) where {RT <: DICTS}
+    (; dct, starts, rperm) = _group_core(f, X, keys(X), RT)
     mapvalues(dct) do gid
         ix = @view rperm[starts[gid + 1]:-1:1 + starts[gid]]
         @view X[ix]
     end
 end
 
-function group(f, X; kwargs...)
-    (; dct, starts, rperm) = _group_core(f, X, values(X); kwargs...)
+function _group(f, X, ::Type{RT}) where {RT <: DICTS}
+    (; dct, starts, rperm) = _group_core(f, X, values(X), RT)
     mapvalues(dct) do gid
         @view rperm[starts[gid + 1]:-1:1 + starts[gid]]
     end
 end
 
-function groupmap(f, ::typeof(length), X; kwargs...)
+function _groupmap(f, ::typeof(length), X, ::Type{RT}) where {RT <: DICTS}
     vals = similar(X, Nothing)
     fill!(vals, nothing)
-    (; dct, starts, rperm) = _group_core(f, X, vals; kwargs...)
+    (; dct, starts, rperm) = _group_core(f, X, vals, RT)
     mapvalues(dct) do gid
         starts[gid + 1] - starts[gid]
     end
 end
 
-function groupmap(f, ::typeof(first), X; kwargs...)
-    (; dct, starts, rperm) = _group_core(f, X, keys(X); kwargs...)
+function _groupmap(f, ::typeof(first), X, ::Type{RT}) where {RT <: DICTS}
+    (; dct, starts, rperm) = _group_core(f, X, keys(X), RT)
     mapvalues(dct) do gid
         ix = rperm[starts[gid + 1]]
         X[ix]
     end
 end
 
-function groupmap(f, ::typeof(last), X; kwargs...)
-    (; dct, starts, rperm) = _group_core(f, X, keys(X); kwargs...)
+function _groupmap(f, ::typeof(last), X, ::Type{RT}) where {RT <: DICTS}
+    (; dct, starts, rperm) = _group_core(f, X, keys(X), RT)
     mapvalues(dct) do gid
         ix = rperm[1 + starts[gid]]
         X[ix]
     end
 end
 
-function groupmap(f, ::typeof(only), X; kwargs...)
-    (; dct, starts, rperm) = _group_core(f, X, keys(X); kwargs...)
+function _groupmap(f, ::typeof(only), X, ::Type{RT}) where {RT <: DICTS}
+    (; dct, starts, rperm) = _group_core(f, X, keys(X), RT)
     mapvalues(dct) do gid
         starts[gid + 1] == starts[gid] + 1 || throw(ArgumentError("groupmap(only, X) requires that each group has exactly one element"))
         ix = rperm[starts[gid + 1]]
@@ -54,8 +67,8 @@ function groupmap(f, ::typeof(only), X; kwargs...)
     end
 end
 
-function groupmap(f, ::typeof(rand), X; kwargs...)
-    (; dct, starts, rperm) = _group_core(f, X, keys(X); kwargs...)
+function _groupmap(f, ::typeof(rand), X, ::Type{RT}) where {RT <: DICTS}
+    (; dct, starts, rperm) = _group_core(f, X, keys(X), RT)
     mapvalues(dct) do gid
         ix = rperm[rand(starts[gid + 1]:-1:1 + starts[gid])]
         X[ix]
