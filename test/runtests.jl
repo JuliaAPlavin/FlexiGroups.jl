@@ -211,6 +211,14 @@ end
     g = group(isodd, skip(isnothing, [1., 2, nothing, 3]))
     @test g == dictionary([true => [1, 3], false => [2]])
     @test g isa Dictionary{Bool, <:SubArray{Float64}}
+
+    g = group(isodd, skip(isnan, [1, 2, NaN, 3]))
+    @test g == dictionary([true => [1, 3], false => [2]])
+    @test g isa Dictionary{Bool, <:SubArray{Float64}}
+
+    g = groupfind(isodd, skip(isnan, [1, 2, NaN, 3]))
+    @test g == dictionary([true => [1, 4], false => [2]])
+    @test g isa Dictionary{Bool, <:SubArray{Int}}
 end
 
 @testitem "_" begin
