@@ -15,6 +15,4 @@ include("dictbacked.jl")
 include("arraybacked.jl")
 include("margins.jl")
 
-_valtype(X) = _eltype(values(X))
-
 end

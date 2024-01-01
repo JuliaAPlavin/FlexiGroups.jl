@@ -62,7 +62,7 @@ function _groupview(f, X, ::Type{RT}) where {RT <: BASERESTYPES}
 end
 
 function _group(f, X, ::Type{RT}) where {RT <: BASERESTYPES}
-    (; dct, starts, rperm) = _group_core(f, X, values(X), RT)
+    (; dct, starts, rperm) = _group_core(f, X, X, RT)
     res = @modify(values(dct)[∗]) do gid
         @view rperm[starts[gid]:starts[gid + 1]-1]
     end

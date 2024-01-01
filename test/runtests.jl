@@ -232,6 +232,31 @@ end
     @test g == dictionary([true => [3, 9, 15], false => [6, 12]])
     @test isconcretetype(eltype(g))
     @test valtype(g) <: SubArray{Int}
+
+    g = @inferred group(Int∘isodd, xs)
+    @test g[false] == [6, 12]
+    @test isconcretetype(eltype(g))
+    @test valtype(g) <: SubArray{Int}
+
+    g = @inferred group(Int∘isodd, (3x for x in [1, 2, 3, 4, 5] if false))
+    @test isempty(g)
+    @test isconcretetype(eltype(g))
+    @test valtype(g) <: SubArray{Int}
+
+    g = @inferred group(isodd ∘ last, enumerate(3 .* [1, 2, 3, 4, 5]))
+    @test g[false] == [(2, 6), (4, 12)]
+    @test isconcretetype(eltype(g))
+    @test valtype(g) <: SubArray{Tuple{Int, Int}}
+
+    g = @inferred group(isodd ∘ last, pairs(3 .* [1, 2, 3, 4, 5]))
+    @test g[false] == [2 => 6, 4 => 12]
+    @test isconcretetype(eltype(g))
+    @test valtype(g) <: SubArray{Pair{Int, Int}}
+
+    g = @inferred group(pairs(3 .* [1, 2, 3, 4, 5]))
+    @test g[1 => 3] == [1 => 3]
+    @test isconcretetype(eltype(g))
+    @test valtype(g) <: SubArray{Pair{Int, Int}}
 end
 
 @testitem "dicttypes" begin

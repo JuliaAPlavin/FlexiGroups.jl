@@ -1,10 +1,10 @@
 module OffsetArraysExt
 
 using OffsetArrays
-import FlexiGroups: _group_core_identity, _similar_1based, _valtype
+import FlexiGroups: _group_core_identity, _similar_1based
 
 function _group_core_identity(X, vals, ::Type{OffsetVector}, len)
-    @assert _valtype(X) == Int
+    @assert eltype(X) == Int
     dct = Base.IdentityUnitRange(minimum(X):maximum(X))
     ngroups = length(dct)
 

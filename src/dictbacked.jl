@@ -29,7 +29,7 @@ end
 
 function _group_core_identity(X, vals, ::Type{DT}, len) where {DT<:DICTS}
     ngroups = 0
-    dct = _default_concrete_dict(DT){_valtype(X), Int}()
+    dct = _default_concrete_dict(DT){eltype(X), Int}()
     groups = _groupid_container(len)
     @inbounds for (i, x) in enumerate(X)
         gid = get!(dct, x, ngroups + 1)

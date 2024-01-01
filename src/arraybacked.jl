@@ -1,5 +1,5 @@
 function _group_core_identity(X, vals, ::Type{Vector}, len)
-    @assert _valtype(X) == Int
+    @assert eltype(X) == Int
     @assert minimum(X) ≥ 1
     ngroups = maximum(X)
     dct = Base.OneTo(ngroups)
