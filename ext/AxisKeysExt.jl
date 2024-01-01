@@ -1,4 +1,10 @@
-using .AxisKeys
+module AxisKeysExt
+using AxisKeys
+using FlexiGroups.Accessors
+using FlexiGroups.DataPipes
+using FlexiGroups.Dictionaries: Dictionary
+using FlexiGroups: flatten, total
+import FlexiGroups: _group, _groupview, _groupfind, _groupmap, addmargins
 
 for f in (:_group, :_groupview, :_groupfind)
     @eval function $f(f, xs, ::Type{TA}; default=undef) where {TA <: AbstractArray}
@@ -40,7 +46,6 @@ end
     end
 end
 
-using FlexiMaps.Accessors
 
 function addmargins(A::KeyedArray; combine=flatten, marginkey=total)
     if ndims(A) == 1
@@ -67,4 +72,6 @@ function addmargins(A::KeyedArray; combine=flatten, marginkey=total)
         end
         return res
     end
+end
+
 end

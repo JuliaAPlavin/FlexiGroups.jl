@@ -117,7 +117,7 @@ end
     @test_throws "must be covered" flatmap_parent(g -> g ./ sum(g), filter(g -> length(g) > 2, g))
 end
 
-@testitem "to keyedarray" begin
+VERSION >= v"1.9-DEV" && @testitem "to keyedarray" begin
     using AxisKeys
 
     xs = 3 .* [1, 2, 3, 4, 5]
@@ -319,7 +319,7 @@ end
 
 @testitem "_" begin
     import Aqua
-    Aqua.test_all(FlexiGroups; ambiguities=false)
+    Aqua.test_all(FlexiGroups; ambiguities=false, project_toml_formatting=false)
     Aqua.test_ambiguities(FlexiGroups)
 
     import CompatHelperLocal as CHL

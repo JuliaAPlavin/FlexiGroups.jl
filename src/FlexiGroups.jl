@@ -5,7 +5,6 @@ using Combinatorics: combinations
 using FlexiMaps: flatten, mapview, _eltype, Accessors
 using DataPipes
 import DataAPI
-using Requires
 
 export
     group, groupview, groupfind, groupmap,
@@ -13,12 +12,6 @@ export
 
 include("base.jl")
 include("margins.jl")
-
-function __init__()
-    @require AxisKeys = "94b1ba4f-4ee9-5380-92f1-94cde586c3c5" begin
-        include("ka.jl")
-    end
-end
 
 
 mapvalues(f, dict::AbstractDictionary) = map(f, dict)
