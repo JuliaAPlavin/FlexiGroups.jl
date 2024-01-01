@@ -17,7 +17,7 @@ TestItems = "1c621080-faea-4a02-84b6-bbd5e436b8fe"
 TypedTables = "9d95f2ec-7b3d-5a63-8d20-e2491e220bb9"
 
 [compat]
-Aqua = "0.5.5"
+Aqua = "0.5.5, 0.6"
 AxisKeys = "0.2.9"
 CategoricalArrays = "0.10.7"
 CompatHelperLocal = "0.1.24"
