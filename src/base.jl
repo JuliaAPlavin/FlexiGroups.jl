@@ -232,5 +232,10 @@ _default_concrete_dict(::Type{AbstractDict}) = Dict
 _default_concrete_dict(::Type{AbstractDictionary}) = Dictionary
 _default_concrete_dict(::Type{T}) where {T} = T
 
-_similar_1based(vals::AbstractArray, len::Integer) = similar(vals, len)
-_similar_1based(vals, len::Integer) = Vector{_eltype(vals)}(undef, len)
+if VERSION < v"1.10-"
+    _similar_1based(vals::AbstractArray, len::Integer) = similar(vals, len)
+    _similar_1based(vals, len::Integer) = Vector{_eltype(vals)}(undef, len)
+else
+    # applicable() is compiletime in 1.10+
+    _similar_1based(vals, len::Integer) = applicable(similar, vals, len) ? similar(vals, len) : Vector{_eltype(vals)}(undef, len)
+end
