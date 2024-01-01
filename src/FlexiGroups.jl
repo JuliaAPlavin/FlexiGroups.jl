@@ -11,6 +11,7 @@ export
     addmargins, MultiGroup, total
 
 include("base.jl")
+include("dictbacked.jl")
 include("arraybacked.jl")
 include("margins.jl")
 
