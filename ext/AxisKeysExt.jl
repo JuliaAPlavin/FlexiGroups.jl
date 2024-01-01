@@ -7,32 +7,37 @@ using FlexiGroups: flatten, total
 import FlexiGroups: _group, _groupview, _groupfind, _groupmap, addmargins
 
 for f in (:_group, :_groupview, :_groupfind)
-    @eval function $f(f, xs, ::Type{TA}; default=undef) where {TA <: AbstractArray}
+    @eval function $f(f, xs, ::Type{TA}; default=undef) where {TA <: KeyedArray}
         gd = $f(f, xs, Dictionary)
         _group_dict_to_ka(gd, default, TA)
     end
 end
 
-function _groupmap(f, mapf, xs, ::Type{TA}; default=undef) where {TA <: AbstractArray}
+function _groupmap(f, mapf, xs, ::Type{TA}; default=undef) where {TA <: KeyedArray}
     gd = _groupmap(f, mapf, xs, Dictionary)
     _group_dict_to_ka(gd, default, TA)
 end
 
+_proplenses(::Type{<:NTuple{N, Any}}) where {N} = map(IndexLens, 1:N)
+_proplenses(::Type{<:NamedTuple{KS}}) where {KS} = map(PropertyLens, KS)
+
+_KeyedArray(A, axkeys::Tuple) = KeyedArray(A, axkeys)
+_KeyedArray(A, axkeys::NamedTuple) = KeyedArray(A; axkeys...)
+
 @generated function _group_dict_to_ka(gd::Dictionary{K, V}, default::D, ::Type{KeyedArray}) where {K, V, D}
-    axkeys_exprs = map(fieldnames(K)) do n
-        col = :( map(Accessors.PropertyLens{$(QuoteNode(n))}(), keys(gd).values) |> unique |> sort )
+    axkeys_exprs = map(_proplenses(K)) do l
+        col = :( map($l, keys(gd).values) |> unique |> sort )
     end
     quote
-        axkeys = NamedTuple{$(fieldnames(K))}(($(axkeys_exprs...),))
+        axkeys = $(constructorof(K))($(axkeys_exprs...),)
 
         vals = gd.values
         sz = map(length, values(axkeys))
-        if default === undef
-            data = similar(vals, sz)
+        $(if D === UndefInitializer
+            :( data = similar(vals, sz) )
         else
-            data = similar(vals, $(Union{V, D}), sz)
-            fill!(data, default)
-        end
+            :( data = fill!(similar(vals, $(Union{V, D}), sz), default) )
+        end)
 
         for (k, v) in pairs(gd)
             # searchsorted relies on sort above
@@ -40,7 +45,7 @@ end
             data[ixs...] = v
         end
 
-        A = KeyedArray(data; axkeys...)
+        A = _KeyedArray(data, axkeys)
 
         return A
     end

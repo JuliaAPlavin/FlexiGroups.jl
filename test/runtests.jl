@@ -117,10 +117,15 @@ end
     @test_throws "must be covered" flatmap_parent(g -> g ./ sum(g), filter(g -> length(g) > 2, g))
 end
 
-VERSION >= v"1.9-DEV" && @testitem "to keyedarray" begin
+@testitem "to keyedarray" begin
     using AxisKeys
 
     xs = 3 .* [1, 2, 3, 4, 5]
+
+    g = group(x -> (isodd(x),), xs; restype=KeyedArray)
+    @test @inferred(FlexiGroups._group(x -> (isodd(x),), xs, KeyedArray)) == g
+    @test g == KeyedArray([[6, 12], [3, 9, 15]], ([false, true],))
+
     g = group(x -> (a=isodd(x),), xs; restype=KeyedArray)
     @test @inferred(FlexiGroups._group(x -> (a=isodd(x),), xs, KeyedArray)) == g
     @test g == KeyedArray([[6, 12], [3, 9, 15]]; a=[false, true])
