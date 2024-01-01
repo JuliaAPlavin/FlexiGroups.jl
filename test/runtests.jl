@@ -70,7 +70,6 @@ end
     xs = [(a=1, b=:x), (a=2, b=:x), (a=2, b=:y), (a=3, b=:x), (a=3, b=:x), (a=3, b=:x)]
     g = @inferred group(x -> x, xs)
     @test map(length, g) == dictionary([(a=1, b=:x) => 1, (a=2, b=:x) => 1, (a=2, b=:y) => 1, (a=3, b=:x) => 3])
-
     gm = @inferred addmargins(g)
     @test map(length, gm) == dictionary([
         (a=1, b=:x) => 1, (a=2, b=:x) => 1, (a=2, b=:y) => 1, (a=3, b=:x) => 3,
@@ -79,6 +78,17 @@ end
         (a=total, b=total) => 6,
     ])
     @test keytype(gm) isa Union  # of NamedTuples
+    @test valtype(gm) |> isconcretetype
+    @test valtype(gm) == Vector{NamedTuple{(:a, :b), Tuple{Int64, Symbol}}}
+
+    g = @inferred group(x -> x.a, xs)
+    @test map(length, g) == dictionary([1 => 1, 2 => 2, 3 => 3])
+    gm = @inferred addmargins(g)
+    @test map(length, gm) == dictionary([
+        1 => 1, 2 => 2, 3 => 3,
+        total => 6,
+    ])
+    @test keytype(gm) == Union{Int, typeof(total)}
     @test valtype(gm) |> isconcretetype
     @test valtype(gm) == Vector{NamedTuple{(:a, :b), Tuple{Int64, Symbol}}}
 

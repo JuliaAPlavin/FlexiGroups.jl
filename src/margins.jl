@@ -48,9 +48,12 @@ Base.show(io::IO, ::MarginKey) = print(io, "total")
     end
 end
 
+addmargins(dict::Dictionary{K, V}; combine=flatten, marginkey=total) where {N, K<:NTuple{N,Any}, V} =
+    throw(ArgumentError("`addmargins()` is not implemented for Tuples as group keys. Use NamedTuples instead."))
+
 function addmargins(dict::Dictionary{K, V}; combine=flatten, marginkey=total) where {K, V}
     KT = Union{K, typeof(marginkey)}
-    VT = Core.Compiler.return_type(combine, Tuple{Tuple{V}})
+    VT = Core.Compiler.return_type(combine, Tuple{Vector{V}})
     res = Dictionary{KT, VT}()
     merge!(res, map(combine ∘ Base.vect, dict))
     merge!(res, _combine_groups_by(Returns(marginkey), dict, combine))
