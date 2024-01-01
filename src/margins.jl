@@ -31,7 +31,7 @@ Base.show(io::IO, ::MIME"text/plain", ::MarginKey) = print(io, "total")
 Base.show(io::IO, ::MarginKey) = print(io, "total")
 
 
-@generated function addmargins(dict::Dictionary{K, V}; combine=flatten, marginkey=total) where {KS, K<:NamedTuple{KS}, V}
+@generated function addmargins(dict::AbstractDictionary{K, V}; combine=flatten, marginkey=total) where {KS, K<:NamedTuple{KS}, V}
     dictexprs = map(combinations(reverse(KS))) do ks
         kf = :(_marginalize_key_func($(Val(Tuple(ks))), marginkey))
         :(merge!(res, _combine_groups_by($kf, dict, combine)))
@@ -48,10 +48,10 @@ Base.show(io::IO, ::MarginKey) = print(io, "total")
     end
 end
 
-addmargins(dict::Dictionary{K, V}; combine=flatten, marginkey=total) where {N, K<:NTuple{N,Any}, V} =
+addmargins(dict::AbstractDictionary{K, V}; combine=flatten, marginkey=total) where {N, K<:NTuple{N,Any}, V} =
     throw(ArgumentError("`addmargins()` is not implemented for Tuples as group keys. Use NamedTuples instead."))
 
-function addmargins(dict::Dictionary{K, V}; combine=flatten, marginkey=total) where {K, V}
+function addmargins(dict::AbstractDictionary{K, V}; combine=flatten, marginkey=total) where {K, V}
     KT = Union{K, typeof(marginkey)}
     VT = Core.Compiler.return_type(combine, Tuple{Vector{V}})
     res = Dictionary{KT, VT}()

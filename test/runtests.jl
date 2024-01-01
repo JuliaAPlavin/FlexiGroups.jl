@@ -131,6 +131,17 @@ end
     @test valtype(gm) |> isconcretetype
     @test valtype(gm) == Vector{NamedTuple{(:a, :b), Tuple{Int64, Symbol}}}
 
+    g = @inferred group(x -> x.a > 2, xs)
+    @test map(length, g) == dictionary([false => 3, true => 3])
+    gm = @inferred addmargins(g)
+    @test map(length, gm) == dictionary([
+        false => 3, true => 3,
+        total => 6,
+    ])
+    @test keytype(gm) == Union{Bool, typeof(total)}
+    @test valtype(gm) |> isconcretetype
+    @test valtype(gm) == Vector{NamedTuple{(:a, :b), Tuple{Int64, Symbol}}}
+
     g = @inferred group(x -> x, StructArray(xs))
     gm = @inferred addmargins(g)
     @test map(length, gm) == dictionary([
