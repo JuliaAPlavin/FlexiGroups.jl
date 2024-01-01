@@ -198,6 +198,7 @@ end
     @test gl == KeyedArray([1 1; 3 0]; a=[false, true], b=[false, true])
 
     @test addmargins(g) == KeyedArray([[6, 12], [3, 9, 15], [6, 12, 3, 9, 15]]; a=[false, true, total])
+    @test eltype(addmargins(g)) == Vector{Int}
     @test addmargins(gl; combine=sum) == KeyedArray([1 1 2; 3 0 3; 4 1 5]; a=[false, true, total], b=[false, true, total])
 end
 

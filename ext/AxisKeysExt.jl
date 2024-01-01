@@ -52,16 +52,18 @@ _KeyedArray(A, axkeys::NamedTuple) = KeyedArray(A; axkeys...)
 end
 
 
-function addmargins(A::KeyedArray; combine=flatten, marginkey=total)
+function addmargins(A::KeyedArray{V}; combine=flatten, marginkey=total) where {V}
+    VT = Core.Compiler.return_type(combine, Tuple{Vector{V}})
+    Ares = convert(AbstractArray{VT}, A)
     if ndims(A) == 1
         nak = named_axiskeys(A)
         nak_ = @modify(only(nak)) do ax
             Union{eltype(ax), typeof(marginkey)}[marginkey]
         end
         m = KeyedArray([combine(A)]; nak_...)
-        return cat(A, m; dims=1)
+        return cat(Ares, m; dims=1)
     else
-        res = A
+        res = Ares
         alldims = Tuple(1:ndims(A))
         allones = ntuple(Returns(1), ndims(A))
         allcolons = map(ax -> Union{eltype(ax), typeof(marginkey)}[marginkey], named_axiskeys(A))
