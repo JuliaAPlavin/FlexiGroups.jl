@@ -173,7 +173,7 @@ end
     @test g[false].a == [6, 12]
 end
 
-@testitem "categoricalarray" begin
+VERSION > v"1.9-" && @testitem "categoricalarray" begin
     using Dictionaries
     using StructArrays
     using CategoricalArrays

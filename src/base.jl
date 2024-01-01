@@ -112,10 +112,6 @@ end
 _group_core(f, X::AbstractArray, vals, dicttype) = _group_core(f, X, vals, dicttype, length(X))
 _group_core(f, X, vals, dicttype) = _group_core(f, X, vals, dicttype, Base.IteratorSize(X) isa Base.SizeUnknown ? missing : length(X))
 _group_core(f, X, vals, dicttype, length) = _group_core_identity(mapview(f, X), vals, dicttype, length)
-_group_core_identity(X, vals, dicttype, length) =
-    _group_core_identity(X, vals, dicttype, length,
-        Val(!isempty(X) && isconcretetype(eltype(X)) && nameof(eltype(X)) === :CategoricalValue && nameof(parentmodule(eltype(X))) === :CategoricalArrays)
-    )
 
 # Bool group keys: fastpath for performance
 function _group_core_identity(X::AbstractArray{Bool}, vals, ::Type{AbstractDictionary}, length::Integer)
@@ -140,7 +136,7 @@ function _group_core_identity(X::AbstractArray{Bool}, vals, ::Type{AbstractDicti
     return (; dct, starts, rperm)
 end
 
-function _group_core_identity(X, vals, ::Type{DT}, length::Integer, categorical) where {DT}
+function _group_core_identity(X, vals, ::Type{DT}, length::Integer) where {DT}
     ngroups = 0
     groups = Vector{Int}(undef, length)
     dct = _default_concrete_dict(DT){_valtype(X), Int}()
@@ -170,7 +166,7 @@ function _group_core_identity(X, vals, ::Type{DT}, length::Integer, categorical)
     return (; dct, starts, rperm)
 end
 
-function _group_core_identity(X, vals, ::Type{DT}, ::Missing, categorical) where {DT}
+function _group_core_identity(X, vals, ::Type{DT}, ::Missing) where {DT}
     ngroups = 0
     groups = Int[]
     dct = _default_concrete_dict(DT){_valtype(X), Int}()
@@ -202,37 +198,6 @@ function _group_core_identity(X, vals, ::Type{DT}, ::Missing, categorical) where
 end
 
 
-function _group_core_identity(X, vals, ::Type{DT}, length::Integer, categorical::Val{true}) where {DT}
-    ngroups = 0
-    groups = Vector{Int}(undef, length)
-    dct = _default_concrete_dict(DT)(
-        # only works for Dictionary, not Dict
-        DataAPI.levels(first(X)),
-        1:Base.length(DataAPI.levels(first(X)))
-    )
-    ngroups = Base.length(dct)
-    @inbounds for (i, x) in enumerate(X)
-        groups[i] = dct[DataAPI.unwrap(x)]
-    end
-
-    starts = zeros(Int, ngroups)
-    @inbounds for gid in groups
-        starts[gid] += 1
-    end
-    cumsum!(starts, starts)
-    push!(starts, length)
-
-    rperm = _similar_1based(vals, length)
-    @inbounds for (v, gid) in zip(vals, groups)
-        rperm[starts[gid]] = v
-        starts[gid] -= 1
-    end
-
-    # dct: key -> group_id
-    # rperm[starts[group_id + 1]:-1:1 + starts[group_id]] = group_values
-
-    return (; dct, starts, rperm)
-end
 
 _default_concrete_dict(::Type{AbstractDict}) = Dict
 _default_concrete_dict(::Type{AbstractDictionary}) = Dictionary

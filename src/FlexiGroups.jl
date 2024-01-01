@@ -4,7 +4,6 @@ using Dictionaries
 using Combinatorics: combinations
 using FlexiMaps: flatten, mapview, _eltype, Accessors
 using DataPipes
-import DataAPI
 
 export
     group, groupview, groupfind, groupmap,
