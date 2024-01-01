@@ -319,6 +319,8 @@ end
 @testitem "structarray" begin
     using Dictionaries
     using StructArrays
+    using FlexiMaps
+    using Accessors
 
     xs = StructArray(a=3 .* [1, 2, 3, 4, 5])
     g = @inferred group(x -> isodd(x.a), xs)
@@ -330,6 +332,15 @@ end
     @test g == dictionary([true => [(a=3,), (a=9,), (a=15,)], false => [(a=6,), (a=12,)]])
     @test isconcretetype(eltype(g))
     @test g[false].a == [6, 12]
+
+    xs = StructArray(
+        a=3 .* [1, 2, 3, 4, 5],
+        b=mapview(_ -> error("Shouldn't happen"), 1:5)
+    )
+    @test_throws "Shouldn't happen" groupmap(x -> isodd(x.a), length, xs)
+    @test groupmap((@optic isodd(_.a)), length, xs)[true] == 3
+    @test_throws "Shouldn't happen" length(group((@optic isodd(_.a)), xs)[true])
+    @test groupview((@optic isodd(_.a)), xs)[true].a == [3, 9, 15]
 end
 
 @testitem "categoricalarray" begin
