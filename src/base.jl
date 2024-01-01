@@ -51,14 +51,14 @@ struct GroupValue end
 Accessors.modify(f, obj, ::GroupValues) = @modify(f, values(obj)[∗] |> GroupValue())
 Accessors.modify(f, obj, ::GroupValue) = f(obj)
 
-function _groupfind(f, X, ::Type{RT}) where {RT <: BASERESTYPES}
+function _groupfind(f::F, X, ::Type{RT}) where {F, RT <: BASERESTYPES}
     (; dct, starts, rperm) = _group_core(f, X, keys(X), RT)
     @modify(dct |> GroupValues()) do gid
         @view rperm[starts[gid]:starts[gid + 1]-1]
     end
 end
 
-function _groupview(f, X, ::Type{RT}) where {RT <: BASERESTYPES}
+function _groupview(f::F, X, ::Type{RT}) where {F, RT <: BASERESTYPES}
     (; dct, starts, rperm) = _group_core(f, X, keys(X), RT)
     @modify(dct |> GroupValues()) do gid
         ix = @view rperm[starts[gid]:starts[gid + 1]-1]
@@ -66,7 +66,7 @@ function _groupview(f, X, ::Type{RT}) where {RT <: BASERESTYPES}
     end
 end
 
-function _group(f, X, ::Type{RT}) where {RT <: BASERESTYPES}
+function _group(f::F, X, ::Type{RT}) where {F, RT <: BASERESTYPES}
     (; dct, starts, rperm) = _group_core(f, X, X, RT)
     res = @modify(dct |> GroupValues()) do gid
         @inline
@@ -74,7 +74,7 @@ function _group(f, X, ::Type{RT}) where {RT <: BASERESTYPES}
     end
 end
 
-function _groupmap(f, ::typeof(length), X, ::Type{RT}) where {RT <: BASERESTYPES}
+function _groupmap(f::F, ::typeof(length), X, ::Type{RT}) where {F, RT <: BASERESTYPES}
     vals = similar(X, Nothing)
     fill!(vals, nothing)
     (; dct, starts, rperm) = _group_core(f, X, vals, RT)
@@ -83,7 +83,7 @@ function _groupmap(f, ::typeof(length), X, ::Type{RT}) where {RT <: BASERESTYPES
     end
 end
 
-function _groupmap(f, ::typeof(first), X, ::Type{RT}) where {RT <: BASERESTYPES}
+function _groupmap(f::F, ::typeof(first), X, ::Type{RT}) where {F, RT <: BASERESTYPES}
     (; dct, starts, rperm) = _group_core(f, X, keys(X), RT)
     @modify(dct |> GroupValues()) do gid
         ix = rperm[starts[gid]]
@@ -91,7 +91,7 @@ function _groupmap(f, ::typeof(first), X, ::Type{RT}) where {RT <: BASERESTYPES}
     end
 end
 
-function _groupmap(f, ::typeof(last), X, ::Type{RT}) where {RT <: BASERESTYPES}
+function _groupmap(f::F, ::typeof(last), X, ::Type{RT}) where {F, RT <: BASERESTYPES}
     (; dct, starts, rperm) = _group_core(f, X, keys(X), RT)
     @modify(dct |> GroupValues()) do gid
         ix = rperm[starts[gid + 1] - 1]
@@ -99,7 +99,7 @@ function _groupmap(f, ::typeof(last), X, ::Type{RT}) where {RT <: BASERESTYPES}
     end
 end
 
-function _groupmap(f, ::typeof(only), X, ::Type{RT}) where {RT <: BASERESTYPES}
+function _groupmap(f::F, ::typeof(only), X, ::Type{RT}) where {F, RT <: BASERESTYPES}
     (; dct, starts, rperm) = _group_core(f, X, keys(X), RT)
     @modify(dct |> GroupValues()) do gid
         starts[gid + 1] == starts[gid] + 1 || throw(ArgumentError("groupmap(only, X) requires that each group has exactly one element"))
@@ -108,7 +108,7 @@ function _groupmap(f, ::typeof(only), X, ::Type{RT}) where {RT <: BASERESTYPES}
     end
 end
 
-function _groupmap(f, ::typeof(rand), X, ::Type{RT}) where {RT <: BASERESTYPES}
+function _groupmap(f::F, ::typeof(rand), X, ::Type{RT}) where {F, RT <: BASERESTYPES}
     (; dct, starts, rperm) = _group_core(f, X, keys(X), RT)
     @modify(dct |> GroupValues()) do gid
         ix = rperm[rand(starts[gid]:starts[gid + 1]-1)]
@@ -117,10 +117,18 @@ function _groupmap(f, ::typeof(rand), X, ::Type{RT}) where {RT <: BASERESTYPES}
 end
 
 
-_group_core(f, X::AbstractArray, vals, dicttype) = _group_core(f, X, vals, dicttype, length(X))
-_group_core(f, X, vals, dicttype) = _group_core(f, X, vals, dicttype, Base.IteratorSize(X) isa Base.SizeUnknown ? missing : length(X))
-_group_core(f, X, vals, dicttype, length) = _group_core_identity(mapview(f, X), vals, dicttype, length)
+_group_core(f::F, X::AbstractArray, vals, dicttype) where {F} = _group_core(f, X, vals, dicttype, length(X))
+_group_core(f::F, X, vals, dicttype) where {F} = _group_core(f, X, vals, dicttype, Base.IteratorSize(X) isa Base.SizeUnknown ? missing : length(X))
+_group_core(f::F, X, vals, dicttype, length) where {F} = _group_core_identity(mapview(f, X), vals, dicttype, length)
 
+# XXX: are these specializations useful? seemed to be, before adding ::F specialization to higher-level group...() funcs
+# __precompile__(false)
+# @eval AccessorsExtra modify(f::F, obj::KVPWrapper{typeof(values)}, ::Elements) where {F} = map(f, obj.obj)
+# @eval Dictionaries function Base.map(f::F, d::AbstractDictionary) where {F}
+#     out = similar(d, Core.Compiler.return_type(f, Tuple{eltype(d)}))
+#     @inbounds map!(f, out, d)
+#     return out
+# end
 
 if VERSION < v"1.10-"
     _similar_1based(vals::AbstractArray, len::Integer) = similar(vals, len)
