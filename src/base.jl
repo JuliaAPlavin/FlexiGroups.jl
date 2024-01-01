@@ -48,14 +48,14 @@ const DICTS = Union{AbstractDict, AbstractDictionary}
 function _groupfind(f, X, ::Type{RT}) where {RT <: DICTS}
     (; dct, starts, rperm) = _group_core(f, X, keys(X), RT)
     @modify(values(dct)[∗]) do gid
-        @view rperm[starts[gid + 1]:-1:1 + starts[gid]]
+        @view rperm[starts[gid]:starts[gid + 1]-1]
     end
 end
 
 function _groupview(f, X, ::Type{RT}) where {RT <: DICTS}
     (; dct, starts, rperm) = _group_core(f, X, keys(X), RT)
     @modify(values(dct)[∗]) do gid
-        ix = @view rperm[starts[gid + 1]:-1:1 + starts[gid]]
+        ix = @view rperm[starts[gid]:starts[gid + 1]-1]
         @view X[ix]
     end
 end
@@ -63,7 +63,7 @@ end
 function _group(f, X, ::Type{RT}) where {RT <: DICTS}
     (; dct, starts, rperm) = _group_core(f, X, values(X), RT)
     @modify(values(dct)[∗]) do gid
-        @view rperm[starts[gid + 1]:-1:1 + starts[gid]]
+        @view rperm[starts[gid]:starts[gid + 1]-1]
     end
 end
 
@@ -79,7 +79,7 @@ end
 function _groupmap(f, ::typeof(first), X, ::Type{RT}) where {RT <: DICTS}
     (; dct, starts, rperm) = _group_core(f, X, keys(X), RT)
     @modify(values(dct)[∗]) do gid
-        ix = rperm[starts[gid + 1]]
+        ix = rperm[starts[gid]]
         X[ix]
     end
 end
@@ -87,7 +87,7 @@ end
 function _groupmap(f, ::typeof(last), X, ::Type{RT}) where {RT <: DICTS}
     (; dct, starts, rperm) = _group_core(f, X, keys(X), RT)
     @modify(values(dct)[∗]) do gid
-        ix = rperm[1 + starts[gid]]
+        ix = rperm[starts[gid + 1] - 1]
         X[ix]
     end
 end
@@ -96,7 +96,7 @@ function _groupmap(f, ::typeof(only), X, ::Type{RT}) where {RT <: DICTS}
     (; dct, starts, rperm) = _group_core(f, X, keys(X), RT)
     @modify(values(dct)[∗]) do gid
         starts[gid + 1] == starts[gid] + 1 || throw(ArgumentError("groupmap(only, X) requires that each group has exactly one element"))
-        ix = rperm[starts[gid + 1]]
+        ix = rperm[starts[gid]]
         X[ix]
     end
 end
@@ -104,7 +104,7 @@ end
 function _groupmap(f, ::typeof(rand), X, ::Type{RT}) where {RT <: DICTS}
     (; dct, starts, rperm) = _group_core(f, X, keys(X), RT)
     @modify(values(dct)[∗]) do gid
-        ix = rperm[rand(starts[gid + 1]:-1:1 + starts[gid])]
+        ix = rperm[rand(starts[gid]:starts[gid + 1]-1)]
         X[ix]
     end
 end
@@ -121,15 +121,23 @@ function _group_core_identity(X::AbstractArray{Bool}, vals, ::Type{AbstractDicti
     dct = isempty(X) ? ArrayDictionary(ArrayIndices(Bool[]), Int[]) : ArrayDictionary(ArrayIndices([true_first, !true_first]), [1, 2])
 
     rperm = _similar_1based(vals, length)
-    i0 = 0
-    i1 = length + 1
+    i0 = 1
+    i1 = length
     @inbounds for (v, gid) in zip(vals, X)
-        rperm[true_first ⊻ gid ? (i1 -= 1) : (i0 += 1)] = v
+        if gid == true_first
+            rperm[i0] = v
+            i0 += 1
+        else
+            rperm[i1] = v
+            i1 -= 1
+        end
     end
-    reverse!(view(rperm, 1:i0))
+    reverse!(@view(rperm[i0:end]))
 
-    i0 == length > 0 && delete!(dct, !true_first)
-    starts = [0, i0, length]
+    if i0 == length + 1 && length > 0
+        delete!(dct, !true_first)
+    end
+    starts = [1, i0, length+1]
 
     return (; dct, starts, rperm)
 end
@@ -150,17 +158,24 @@ function _group_core_identity(X, vals, ::Type{DT}, len) where {DT}
     @inbounds for gid in groups
         starts[gid] += 1
     end
+    # now starts[gid] is the number of elements in group gid
+    pushfirst!(starts, 1)
     cumsum!(starts, starts)
-    push!(starts, length(groups))
+    # now starts[gid] is the (#elements in groups 1:gid-1) + 1
+    # or the index of the first element of group gid in (future) rperm
 
     rperm = _similar_1based(vals, length(groups))
     @inbounds for (v, gid) in zip(vals, groups)
         rperm[starts[gid]] = v
+        starts[gid] += 1
+    end
+    # now starts[gid] is the index just after the last element of group gid in rperm
+    for gid in groups
         starts[gid] -= 1
     end
 
     # dct: key -> group_id
-    # rperm[starts[group_id + 1]:-1:1 + starts[group_id]] = group_values
+    # rperm[starts[group_id]:starts[group_id+1]-1] = group_values
     return (; dct, starts, rperm)
 end
 
