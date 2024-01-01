@@ -9,13 +9,9 @@ function _group_core_identity(X::AbstractArray{Bool}, vals, ::Type{AbstractDicti
     i0 = 1
     i1 = length
     @inbounds for (v, gid) in zip(vals, X)
-        if gid == true_first
-            rperm[i0] = v
-            i0 += 1
-        else
-            rperm[i1] = v
-            i1 -= 1
-        end
+        atstart = gid == true_first
+        rperm[atstart ? i0 : i1] = v
+        atstart ? (i0 += 1) : (i1 -= 1)
     end
     reverse!(@view(rperm[i0:end]))
 
