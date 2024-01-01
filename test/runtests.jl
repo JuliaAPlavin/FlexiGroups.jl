@@ -63,6 +63,45 @@ end
     @test @inferred(groupmap(isodd, only, [10, 11])) == dictionary([false => 10, true => 11])
 end
 
+@testitem "multigroup" begin
+    using Dictionaries
+
+    xs = 1:5
+    G = @inferred(groupmap(
+        x -> MultiGroup([isodd(x) ? "odd" : "even", x >= 3 ? "large" : "small"]),
+        length, xs
+    ))
+    @test G == dictionary([
+        "odd" => 3,
+        "small" => 2,
+        "even" => 2,
+        "large" => 3,
+    ])
+    @test @inferred(groupmap(
+            x -> MultiGroup(x >= 3 ? ["L", "XL"] : x >= 2 ? ["L"] : ["S"]),
+            length, xs)) == dictionary([
+        "S" => 1,
+        "L" => 4,
+        "XL" => 3,
+    ])
+    @test @inferred(groupmap(
+            x -> MultiGroup((isodd(x) ? "odd" : "even", x >= 3 ? "large" : "small")),
+            length, xs)) == dictionary([
+        "odd" => 3,
+        "small" => 2,
+        "even" => 2,
+        "large" => 3,
+    ])
+    @test @inferred(groupmap(
+            x -> MultiGroup((isodd(x) ? "odd" : "even", x >= 3)),
+            length, xs)) == dictionary([
+        "odd" => 3,
+        false => 2,
+        "even" => 2,
+        true => 3,
+    ])
+end
+
 @testitem "margins" begin
     using Dictionaries
     using StructArrays

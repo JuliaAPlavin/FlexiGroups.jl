@@ -7,7 +7,7 @@ using DataPipes
 
 export
     group, groupview, groupfind, groupmap,
-    addmargins, total
+    addmargins, MultiGroup, total
 
 include("base.jl")
 include("margins.jl")

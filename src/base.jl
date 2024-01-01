@@ -164,12 +164,53 @@ function _group_core_identity(X, vals, ::Type{DT}, len) where {DT}
     return (; dct, starts, rperm)
 end
 
+struct MultiGroup{G}
+    groups::G
+end
+Base.hash(mg::MultiGroup, h::UInt) = error("Deliberately unsupported, should be unreachable")
+
+function _group_core_identity(X::AbstractArray{MultiGroup{GT}}, vals, ::Type{DT}, len) where {DT,GT}
+    ngroups = Ref(0)
+    dct = _default_concrete_dict(DT){eltype(GT), Int}()
+    groups = Vector{_similar_container_type(GT, Int)}(undef, len)
+    @inbounds for (i, x) in enumerate(X)
+        groups[i] = map(x.groups) do gkey
+            gid = get!(dct, gkey, ngroups[] + 1)
+            if gid == ngroups[] + 1
+                ngroups[] += 1
+            end
+            return gid
+        end
+    end
+
+    starts = zeros(Int, ngroups[])
+    @inbounds for gids in groups
+        for gid in gids
+            starts[gid] += 1
+        end
+    end
+    cumsum!(starts, starts)
+    push!(starts, sum(length, groups))
+
+    rperm = _similar_1based(vals, sum(length, groups))
+    @inbounds for (v, gids) in zip(vals, groups)
+        for gid in gids
+            rperm[starts[gid]] = v
+            starts[gid] -= 1
+        end
+    end
+
+    return (; dct, starts, rperm)
+end
+
 _groupid_container(len::Missing) = Int[]
 _push_or_set!(groups, i, gid, len::Missing) = push!(groups, gid)
 
 _groupid_container(len::Integer) = Vector{Int}(undef, len)
 _push_or_set!(groups, i, gid, len::Integer) = groups[i] = gid
 
+_similar_container_type(::Type{<:AbstractArray}, ::Type{T}) where {T} = Vector{T}
+_similar_container_type(::Type{<:NTuple{N,Any}}, ::Type{T}) where {N,T} = NTuple{N,T}
 
 
 _default_concrete_dict(::Type{AbstractDict}) = Dict
