@@ -125,14 +125,31 @@ end
 end
 
 @testitem "Groups" begin
-    xs = 3 .* [1, 2, 3, 4, 5]
-    g = @inferred group_vg(isodd, xs)
+    using Accessors
+    using StructArrays
+
+    xs = StructArray(x=3 .* [1, 2, 3, 4, 5])
+    g = @inferred group_vg(x->isodd(x.x), xs)
     @test length(g) == 2
     @test key(first(g)) === true
-    @test values(first(g))::SubArray{Int} == [3, 9, 15]
+    @test values(first(g)).x::SubArray{Int} == [3, 9, 15]
     @test isconcretetype(eltype(g))
-    @test g isa Vector{<:Group{Bool, <:SubArray{Int}}}
+    @test g isa Vector{<:Group{Bool, <:StructArray}}
 
+    gr = first(g)
+    @test gr == gr
+    @test_broken gr != [(x = 3,), (x = 9,), (x = 15,)]
+    @test gr == Group(true, [(x = 3,), (x = 9,), (x = 15,)])
+    @test gr != Group(true, [(x = 3,), (x = 9,), (x = 10,)])
+    @test gr != Group(false, [(x = 3,), (x = 9,), (x = 15,)])
+    @test length(gr) == 3
+    @test gr[2] == (x=9,)
+    @test gr.x == [3, 9, 15]
+    @test_broken map(identity, gr).x == [3, 9, 15]
+    @test modify(reverse, gr, values) == Group(true, [(x=15,), (x=9,), (x=3,)])
+    @test @modify(reverse, g |> Elements() |> values)[1] == Group(true, [(x=15,), (x=9,), (x=3,)])
+
+    xs = 3 .* [1, 2, 3, 4, 5]
     g = @inferred group_vg(x->isodd(x) ? 1 : 0, xs)
     @test length(g) == 2
     @test key(first(g)) === 1
