@@ -115,6 +115,7 @@ end
     @test groupmap(x -> isodd(x) ? 2 : 1, length, xs, restype=Vector) == [1, 4]
     @test groupmap(identity, length, xs, restype=Vector) == [3, 1, 1]
     @test groupmap(identity, length, 3 .* xs, restype=Vector) == [0, 0, 3, 0, 0, 1, 0, 0, 1]
+    @test group(identity, 3 .* xs, restype=Vector) == [[], [], [3, 3, 3], [], [], [6], [], [], [9]]
 
     @test_throws AssertionError group(Int ∘ isodd, xs, restype=Vector)
     g = group(Int ∘ isodd, xs, restype=OffsetVector)
