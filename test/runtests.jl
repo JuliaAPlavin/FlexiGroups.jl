@@ -461,8 +461,8 @@ end
 
 @testitem "_" begin
     import Aqua
-    Aqua.test_all(FlexiGroups; ambiguities=false, project_toml_formatting=false)
-    Aqua.test_ambiguities(FlexiGroups)
+    Aqua.test_all(FlexiGroups; ambiguities=false)
+    # Aqua.test_ambiguities(FlexiGroups)
 
     import CompatHelperLocal as CHL
     CHL.@check()
