@@ -30,6 +30,7 @@ function groupview end
 
 Like `map(mapf, group(keyf, X))`, but more efficient. Supports a limited set of `mapf` functions: `length`, `first`/`last`, `only`, `rand`.
 """
+function groupmap end
 
 group(X; kwargs...) = group(identity, X; kwargs...)
 groupfind(X; kwargs...) = groupfind(identity, X; kwargs...)
