@@ -205,10 +205,11 @@ end
 function _group_core_identity(X, vals, ::Type{DT}, length::Integer, categorical::Val{true}) where {DT}
     ngroups = 0
     groups = Vector{Int}(undef, length)
-    dct = _default_concrete_dict(DT){eltype(Core.Compiler.return_type(DataAPI.levels, Tuple{eltype(X)})), Int}()
-    for x in DataAPI.levels(first(X))
-        insert!(dct, DataAPI.unwrap(x), Base.length(dct) + 1)
-    end
+    dct = _default_concrete_dict(DT)(
+        # only works for Dictionary, not Dict
+        DataAPI.levels(first(X)),
+        1:Base.length(DataAPI.levels(first(X)))
+    )
     ngroups = Base.length(dct)
     @inbounds for (i, x) in enumerate(X)
         groups[i] = dct[DataAPI.unwrap(x)]
