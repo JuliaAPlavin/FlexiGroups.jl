@@ -46,16 +46,21 @@ groupmap(f, mapf, X; restype=AbstractDictionary, kwargs...) = _groupmap(f, mapf,
 const DICTS = Union{AbstractDict, AbstractDictionary}
 const BASERESTYPES = Union{DICTS, AbstractVector}
 
+struct GroupValues end
+struct GroupValue end
+Accessors.modify(f, obj, ::GroupValues) = @modify(f, values(obj)[∗] |> GroupValue())
+Accessors.modify(f, obj, ::GroupValue) = f(obj)
+
 function _groupfind(f, X, ::Type{RT}) where {RT <: BASERESTYPES}
     (; dct, starts, rperm) = _group_core(f, X, keys(X), RT)
-    @modify(values(dct)[∗]) do gid
+    @modify(dct |> GroupValues()) do gid
         @view rperm[starts[gid]:starts[gid + 1]-1]
     end
 end
 
 function _groupview(f, X, ::Type{RT}) where {RT <: BASERESTYPES}
     (; dct, starts, rperm) = _group_core(f, X, keys(X), RT)
-    @modify(values(dct)[∗]) do gid
+    @modify(dct |> GroupValues()) do gid
         ix = @view rperm[starts[gid]:starts[gid + 1]-1]
         @view X[ix]
     end
@@ -63,7 +68,8 @@ end
 
 function _group(f, X, ::Type{RT}) where {RT <: BASERESTYPES}
     (; dct, starts, rperm) = _group_core(f, X, X, RT)
-    res = @modify(values(dct)[∗]) do gid
+    res = @modify(dct |> GroupValues()) do gid
+        @inline
         @view rperm[starts[gid]:starts[gid + 1]-1]
     end
 end
@@ -72,14 +78,14 @@ function _groupmap(f, ::typeof(length), X, ::Type{RT}) where {RT <: BASERESTYPES
     vals = similar(X, Nothing)
     fill!(vals, nothing)
     (; dct, starts, rperm) = _group_core(f, X, vals, RT)
-    @modify(values(dct)[∗]) do gid
+    @modify(dct |> GroupValues()) do gid
         starts[gid + 1] - starts[gid]
     end
 end
 
 function _groupmap(f, ::typeof(first), X, ::Type{RT}) where {RT <: BASERESTYPES}
     (; dct, starts, rperm) = _group_core(f, X, keys(X), RT)
-    @modify(values(dct)[∗]) do gid
+    @modify(dct |> GroupValues()) do gid
         ix = rperm[starts[gid]]
         X[ix]
     end
@@ -87,7 +93,7 @@ end
 
 function _groupmap(f, ::typeof(last), X, ::Type{RT}) where {RT <: BASERESTYPES}
     (; dct, starts, rperm) = _group_core(f, X, keys(X), RT)
-    @modify(values(dct)[∗]) do gid
+    @modify(dct |> GroupValues()) do gid
         ix = rperm[starts[gid + 1] - 1]
         X[ix]
     end
@@ -95,7 +101,7 @@ end
 
 function _groupmap(f, ::typeof(only), X, ::Type{RT}) where {RT <: BASERESTYPES}
     (; dct, starts, rperm) = _group_core(f, X, keys(X), RT)
-    @modify(values(dct)[∗]) do gid
+    @modify(dct |> GroupValues()) do gid
         starts[gid + 1] == starts[gid] + 1 || throw(ArgumentError("groupmap(only, X) requires that each group has exactly one element"))
         ix = rperm[starts[gid]]
         X[ix]
@@ -104,7 +110,7 @@ end
 
 function _groupmap(f, ::typeof(rand), X, ::Type{RT}) where {RT <: BASERESTYPES}
     (; dct, starts, rperm) = _group_core(f, X, keys(X), RT)
-    @modify(values(dct)[∗]) do gid
+    @modify(dct |> GroupValues()) do gid
         ix = rperm[rand(starts[gid]:starts[gid + 1]-1)]
         X[ix]
     end

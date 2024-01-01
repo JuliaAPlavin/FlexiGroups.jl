@@ -124,6 +124,35 @@ end
     @test g == OffsetArray([[2], [1, 1, 1, 3]], 0:1)
 end
 
+@testitem "Groups" begin
+    xs = 3 .* [1, 2, 3, 4, 5]
+    g = @inferred group_vg(isodd, xs)
+    @test length(g) == 2
+    @test key(first(g)) === true
+    @test values(first(g))::SubArray{Int} == [3, 9, 15]
+    @test isconcretetype(eltype(g))
+    @test g isa Vector{<:Group{Bool, <:SubArray{Int}}}
+
+    g = @inferred group_vg(x->isodd(x) ? 1 : 0, xs)
+    @test length(g) == 2
+    @test key(first(g)) === 1
+    @test values(first(g))::SubArray{Int} == [3, 9, 15]
+    @test isconcretetype(eltype(g))
+    @test g isa Vector{<:Group{Int, <:SubArray{Int}}}
+
+    g = @inferred groupmap_vg(x->isodd(x) ? 1 : 0, length, xs)
+    @test g == [Group(1, 3), Group(0, 2)]
+    @test isconcretetype(eltype(g))
+
+    g = map(group_vg(x -> (o=isodd(x),), xs)) do gr
+        (; key(gr)..., cnt=length(values(gr)), tot=sum(values(gr)))
+    end
+    @test g == [(o=true, cnt=3, tot=27), (o=false, cnt=2, tot=18)]
+
+    # gm = @inferred addmargins(g; combine=sum)
+    # @test g == [Group(1, 3), Group(0, 2), Group(total, 5)]
+end
+
 @testitem "margins" begin
     using Dictionaries
     using StructArrays

@@ -61,7 +61,7 @@ end
 
 _marginalize_key_func(::Val{ks_colon}, marginkey) where {ks_colon} = key -> merge(key, NamedTuple{ks_colon}(ntuple(Returns(marginkey), length(ks_colon))))
 
-_combine_groups_by(kf, dict, combine) = @p begin
+_combine_groups_by(kf, dict::AbstractDictionary, combine) = @p begin
     keys(dict)
     groupfind(kf)
     map() do grixs
