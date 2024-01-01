@@ -102,6 +102,27 @@ end
     ])
 end
 
+@testitem "to vector, offsetvector" begin
+    using OffsetArrays
+    
+    xs = [1, 2, 1, 1, 3]
+    g = group(identity, xs, restype=Vector)
+    @test g == [[1, 1, 1], [2], [3]]
+
+    g = group(x -> isodd(x) ? 2 : 1, xs, restype=Vector)
+    @test g == [[2], [1, 1, 1, 3]]
+    
+    @test groupmap(x -> isodd(x) ? 2 : 1, length, xs, restype=Vector) == [1, 4]
+    @test groupmap(identity, length, xs, restype=Vector) == [3, 1, 1]
+    @test groupmap(identity, length, 3 .* xs, restype=Vector) == [0, 0, 3, 0, 0, 1, 0, 0, 1]
+
+    @test_throws AssertionError group(Int ∘ isodd, xs, restype=Vector)
+    g = group(Int ∘ isodd, xs, restype=OffsetVector)
+    @test axes(g, 1) == 0:1
+    @test g[0] == [2]
+    @test g == OffsetArray([[2], [1, 1, 1, 3]], 0:1)
+end
+
 @testitem "margins" begin
     using Dictionaries
     using StructArrays

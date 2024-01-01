@@ -44,15 +44,16 @@ groupmap(f, mapf, X; restype=AbstractDictionary, kwargs...) = _groupmap(f, mapf,
 
 
 const DICTS = Union{AbstractDict, AbstractDictionary}
+const BASERESTYPES = Union{DICTS, AbstractVector}
 
-function _groupfind(f, X, ::Type{RT}) where {RT <: DICTS}
+function _groupfind(f, X, ::Type{RT}) where {RT <: BASERESTYPES}
     (; dct, starts, rperm) = _group_core(f, X, keys(X), RT)
     @modify(values(dct)[∗]) do gid
         @view rperm[starts[gid]:starts[gid + 1]-1]
     end
 end
 
-function _groupview(f, X, ::Type{RT}) where {RT <: DICTS}
+function _groupview(f, X, ::Type{RT}) where {RT <: BASERESTYPES}
     (; dct, starts, rperm) = _group_core(f, X, keys(X), RT)
     @modify(values(dct)[∗]) do gid
         ix = @view rperm[starts[gid]:starts[gid + 1]-1]
@@ -60,14 +61,16 @@ function _groupview(f, X, ::Type{RT}) where {RT <: DICTS}
     end
 end
 
-function _group(f, X, ::Type{RT}) where {RT <: DICTS}
+function _group(f, X, ::Type{RT}) where {RT <: BASERESTYPES}
     (; dct, starts, rperm) = _group_core(f, X, values(X), RT)
-    @modify(values(dct)[∗]) do gid
+    @show dct
+    res = @modify(values(dct)[∗]) do gid
         @view rperm[starts[gid]:starts[gid + 1]-1]
     end
+    @show res
 end
 
-function _groupmap(f, ::typeof(length), X, ::Type{RT}) where {RT <: DICTS}
+function _groupmap(f, ::typeof(length), X, ::Type{RT}) where {RT <: BASERESTYPES}
     vals = similar(X, Nothing)
     fill!(vals, nothing)
     (; dct, starts, rperm) = _group_core(f, X, vals, RT)
@@ -76,7 +79,7 @@ function _groupmap(f, ::typeof(length), X, ::Type{RT}) where {RT <: DICTS}
     end
 end
 
-function _groupmap(f, ::typeof(first), X, ::Type{RT}) where {RT <: DICTS}
+function _groupmap(f, ::typeof(first), X, ::Type{RT}) where {RT <: BASERESTYPES}
     (; dct, starts, rperm) = _group_core(f, X, keys(X), RT)
     @modify(values(dct)[∗]) do gid
         ix = rperm[starts[gid]]
@@ -84,7 +87,7 @@ function _groupmap(f, ::typeof(first), X, ::Type{RT}) where {RT <: DICTS}
     end
 end
 
-function _groupmap(f, ::typeof(last), X, ::Type{RT}) where {RT <: DICTS}
+function _groupmap(f, ::typeof(last), X, ::Type{RT}) where {RT <: BASERESTYPES}
     (; dct, starts, rperm) = _group_core(f, X, keys(X), RT)
     @modify(values(dct)[∗]) do gid
         ix = rperm[starts[gid + 1] - 1]
@@ -92,7 +95,7 @@ function _groupmap(f, ::typeof(last), X, ::Type{RT}) where {RT <: DICTS}
     end
 end
 
-function _groupmap(f, ::typeof(only), X, ::Type{RT}) where {RT <: DICTS}
+function _groupmap(f, ::typeof(only), X, ::Type{RT}) where {RT <: BASERESTYPES}
     (; dct, starts, rperm) = _group_core(f, X, keys(X), RT)
     @modify(values(dct)[∗]) do gid
         starts[gid + 1] == starts[gid] + 1 || throw(ArgumentError("groupmap(only, X) requires that each group has exactly one element"))
@@ -101,7 +104,7 @@ function _groupmap(f, ::typeof(only), X, ::Type{RT}) where {RT <: DICTS}
     end
 end
 
-function _groupmap(f, ::typeof(rand), X, ::Type{RT}) where {RT <: DICTS}
+function _groupmap(f, ::typeof(rand), X, ::Type{RT}) where {RT <: BASERESTYPES}
     (; dct, starts, rperm) = _group_core(f, X, keys(X), RT)
     @modify(values(dct)[∗]) do gid
         ix = rperm[rand(starts[gid]:starts[gid + 1]-1)]
@@ -142,7 +145,7 @@ function _group_core_identity(X::AbstractArray{Bool}, vals, ::Type{AbstractDicti
     return (; dct, starts, rperm)
 end
 
-function _group_core_identity(X, vals, ::Type{DT}, len) where {DT}
+function _group_core_identity(X, vals, ::Type{DT}, len) where {DT<:DICTS}
     ngroups = 0
     dct = _default_concrete_dict(DT){_valtype(X), Int}()
     groups = _groupid_container(len)
@@ -184,7 +187,7 @@ struct MultiGroup{G}
 end
 Base.hash(mg::MultiGroup, h::UInt) = error("Deliberately unsupported, should be unreachable")
 
-function _group_core_identity(X::AbstractArray{MultiGroup{GT}}, vals, ::Type{DT}, len) where {DT,GT}
+function _group_core_identity(X::AbstractArray{MultiGroup{GT}}, vals, ::Type{DT}, len) where {DT<:DICTS,GT}
     ngroups = Ref(0)
     dct = _default_concrete_dict(DT){eltype(GT), Int}()
     groups = Vector{_similar_container_type(GT, Int)}(undef, len)

@@ -1,8 +1,9 @@
 module CategoricalArraysExt
 using CategoricalArrays
+using FlexiGroups
 import FlexiGroups: _group_core_identity, _default_concrete_dict, _similar_1based
 
-function _group_core_identity(X::AbstractArray{<:CategoricalValue}, vals, ::Type{DT}, length::Integer) where {DT}
+function _group_core_identity(X::AbstractArray{<:CategoricalValue}, vals, ::Type{DT}, length::Integer) where {DT <: FlexiGroups.DICTS}
     if isempty(X)
         return @invoke _group_core_identity(X::AbstractArray, vals, DT, length)
     end
