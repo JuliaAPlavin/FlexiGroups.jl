@@ -131,49 +131,16 @@ function _group_core_identity(X::AbstractArray{Bool}, vals, ::Type{AbstractDicti
     i0 == length > 0 && delete!(dct, !true_first)
     starts = [0, i0, length]
 
-    # dct: key -> group_id
-    # rperm[starts[group_id + 1]:-1:1 + starts[group_id]] = group_values
-
     return (; dct, starts, rperm)
 end
 
-function _group_core_identity(X, vals, ::Type{DT}, length::Integer) where {DT}
+function _group_core_identity(X, vals, ::Type{DT}, len) where {DT}
     ngroups = 0
-    groups = Vector{Int}(undef, length)
     dct = _default_concrete_dict(DT){_valtype(X), Int}()
-    @inbounds for (i, x) in enumerate(X)
-        groups[i] = gid = get!(dct, x, ngroups + 1)
-        if gid == ngroups + 1
-            ngroups += 1
-        end
-    end
-
-    starts = zeros(Int, ngroups)
-    @inbounds for gid in groups
-        starts[gid] += 1
-    end
-    cumsum!(starts, starts)
-    push!(starts, length)
-
-    rperm = _similar_1based(vals, length)
-    @inbounds for (v, gid) in zip(vals, groups)
-        rperm[starts[gid]] = v
-        starts[gid] -= 1
-    end
-
-    # dct: key -> group_id
-    # rperm[starts[group_id + 1]:-1:1 + starts[group_id]] = group_values
-
-    return (; dct, starts, rperm)
-end
-
-function _group_core_identity(X, vals, ::Type{DT}, ::Missing) where {DT}
-    ngroups = 0
-    groups = Int[]
-    dct = _default_concrete_dict(DT){_valtype(X), Int}()
+    groups = _groupid_container(len)
     @inbounds for (i, x) in enumerate(X)
         gid = get!(dct, x, ngroups + 1)
-        push!(groups, gid)
+        _push_or_set!(groups, i, gid, len)
         if gid == ngroups + 1
             ngroups += 1
         end
@@ -194,9 +161,14 @@ function _group_core_identity(X, vals, ::Type{DT}, ::Missing) where {DT}
 
     # dct: key -> group_id
     # rperm[starts[group_id + 1]:-1:1 + starts[group_id]] = group_values
-
     return (; dct, starts, rperm)
 end
+
+_groupid_container(len::Missing) = Int[]
+_push_or_set!(groups, i, gid, len::Missing) = push!(groups, gid)
+
+_groupid_container(len::Integer) = Vector{Int}(undef, len)
+_push_or_set!(groups, i, gid, len::Integer) = groups[i] = gid
 
 
 
@@ -204,5 +176,5 @@ _default_concrete_dict(::Type{AbstractDict}) = Dict
 _default_concrete_dict(::Type{AbstractDictionary}) = Dictionary
 _default_concrete_dict(::Type{T}) where {T} = T
 
-_similar_1based(vals::AbstractArray, length::Integer) = similar(vals, length)
-_similar_1based(vals, length::Integer) = Vector{_eltype(vals)}(undef, length)
+_similar_1based(vals::AbstractArray, len::Integer) = similar(vals, len)
+_similar_1based(vals, len::Integer) = Vector{_eltype(vals)}(undef, len)
