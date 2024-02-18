@@ -23,9 +23,14 @@ function _group_core_identity(X::AbstractArray{Bool}, vals, ::Type{AbstractDicti
     return (; dct, starts, rperm)
 end
 
+# exhaustive list of possible values in X, eg categories or enum values
+# nothing if can't be determined without iterating X
+_possible_values(X) = nothing
+
 function _group_core_identity(X, vals, ::Type{DT}, len) where {DT<:DICTS}
-    ngroups = 0
-    dct = _default_concrete_dict(DT){eltype(X), Int}()
+    levs = @something _possible_values(X) eltype(X)[]
+    dct = _dict_kv_constructor(DT)(levs, isempty(levs) ? Int[] : Base.OneTo(length(levs)))
+    ngroups = length(dct)
     groups = _groupid_container(len)
     @inbounds for (i, x) in enumerate(X)
         gid = get!(dct, x, ngroups + 1)
@@ -66,8 +71,8 @@ end
 Base.hash(mg::MultiGroup, h::UInt) = error("Deliberately unsupported, should be unreachable")
 
 function _group_core_identity(X::AbstractArray{MultiGroup{GT}}, vals, ::Type{DT}, len) where {DT<:DICTS,GT}
-    ngroups = Ref(0)
-    dct = _default_concrete_dict(DT){eltype(GT), Int}()
+    dct = _dict_kv_constructor(DT)(eltype(GT)[], Int[])
+    ngroups = Ref(length(dct))
     groups = Vector{_similar_container_type(GT, Int)}(undef, len)
     @inbounds for (i, x) in enumerate(X)
         groups[i] = map(x.groups) do gkey
@@ -109,6 +114,7 @@ _similar_container_type(::Type{<:AbstractArray}, ::Type{T}) where {T} = Vector{T
 _similar_container_type(::Type{<:NTuple{N,Any}}, ::Type{T}) where {N,T} = NTuple{N,T}
 
 
-_default_concrete_dict(::Type{AbstractDict}) = Dict
-_default_concrete_dict(::Type{AbstractDictionary}) = Dictionary
-_default_concrete_dict(::Type{T}) where {T} = T
+_dict_kv_constructor(::Type{AbstractDict}) = _dict_kv_constructor(Dict)
+_dict_kv_constructor(::Type{AbstractDictionary}) = Dictionary
+_dict_kv_constructor(::Type{T}) where {T<:AbstractDict} = (ks, vs) -> T(zip(ks, vs))
+_dict_kv_constructor(::Type{T}) where {T} = T

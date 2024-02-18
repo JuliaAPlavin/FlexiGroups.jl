@@ -1,7 +1,7 @@
 name = "FlexiGroups"
 uuid = "1e56b746-2900-429a-8028-5ec1f00612ec"
 authors = ["Alexander Plavin <alexander@plav.in>"]
-version = "0.1.22"
+version = "0.1.23"
 
 [deps]
 AccessorsExtra = "33016aad-b69d-45be-9359-82a41f556fd4"
@@ -14,21 +14,24 @@ FlexiMaps = "6394faf6-06db-4fa8-b750-35ccc60383f7"
 AxisKeys = "94b1ba4f-4ee9-5380-92f1-94cde586c3c5"
 CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
 OffsetArrays = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
+StructArrays = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
 
 [extensions]
 AxisKeysExt = "AxisKeys"
 CategoricalArraysExt = "CategoricalArrays"
 OffsetArraysExt = "OffsetArrays"
+StructArraysExt = "StructArrays"
 
 [compat]
-AccessorsExtra = "0.1.59"
+AccessorsExtra = "0.1.67"
 AxisKeys = "0.2.12"
 CategoricalArrays = "0.10"
 Combinatorics = "1.0.2"
 DataPipes = "0.3.0"
 Dictionaries = "0.3.24"
-FlexiMaps = "0.1.0"
+FlexiMaps = "0.1.23"
 OffsetArrays = "1.12.7"
+StructArrays = "0.6"
 julia = "1.6"
 
 [extras]

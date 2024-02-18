@@ -350,20 +350,28 @@ end
     using Dictionaries
     using StructArrays
     using CategoricalArrays
+    using FlexiGroups.AccessorsExtra
 
-    a = CategoricalArray(["a", "a", "b", "c"])[1:3]
-    @test groupmap(length, a) == dictionary(["a" => 2, "b" => 1, "c" => 0])
+    a = CategoricalArray(["a", "a", "b", "c"])
+    @test group(a[1:3]) == dictionary(["a" => ["a", "a"], "b" => ["b"], "c" => []])
+    @test group(a[1:0]) == dictionary(["a" => [], "b" => [], "c" => []])
+    @test groupmap(length, a[1:3]) == dictionary(["a" => 2, "b" => 1, "c" => 0])
+    @test groupmap(length, a[1:0]) == dictionary(["a" => 0, "b" => 0, "c" => 0])
+    @test groupmap(length, StructArray((a[1:2],))) == dictionary([("a",) => 2, ("b",) => 0, ("c",) => 0])
+    @test groupmap(length, StructArray(;a=a[1:2])) == dictionary([(a="a",) => 2, (a="b",) => 0, (a="c",) => 0])
+    @test groupmap((@o _.a), length, StructArray(;a=a[1:2])) == dictionary(["a" => 2, "b" => 0, "c" => 0])
+    @test groupmap((@o _.a), length, StructArray(;a=a[1:0])) == dictionary(["a" => 0, "b" => 0, "c" => 0])
+    @test groupmap(length, StructArray(a=a[1:2], b=a[2:3])) == dictionary([(a="a", b="a") => 1, (a="b", b="a") => 0, (a="c", b="a") => 0, (a="a", b="b") => 1, (a="b", b="b") => 0, (a="c", b="b") => 0, (a="a", b="c") => 0, (a="b", b="c") => 0, (a="c", b="c") => 0])
+    @test groupmap((@optic₊ (_.a, _.b)), length, StructArray(a=a[1:2], b=a[2:3])) == dictionary([("a", "a") => 1, ("b", "a") => 0, ("c", "a") => 0, ("a", "b") => 1, ("b", "b") => 0, ("c", "b") => 0, ("a", "c") => 0, ("b", "c") => 0, ("c", "c") => 0])
+    @test groupmap(x -> x.a, length, StructArray(; a)) == dictionary(["a" => 2, "b" => 1, "c" => 1])
+    @test groupmap(x -> x.a, length, [(; a) for a in a]) == dictionary(["a" => 2, "b" => 1, "c" => 1])
 
-    # empty with categorical values: works, but returns empty dict, same as without categoricalvalues
-    @test groupmap(length, a[1:0]) == dictionary([])
-    # should return zero counts for all levels, but how to get levels in code?..
-    @test_broken groupmap(length, a[1:0]) == dictionary(["a" => 0, "b" => 0, "c" => 0])
+    # cannot extract levels for now, but should be possible:
+    @test groupmap(length, StructArray(;a=a[1:2], b=[1,1])) == dictionary([(a="a", b=1) => 2])
 
-    @test_broken @inferred(group(a))
-    xs = StructArray(; a)
-    @test groupmap(x -> x.a, length, xs) == dictionary(["a" => 2, "b" => 1, "c" => 0])
-    xs = [(; a) for a in a]
-    @test groupmap(x -> x.a, length, xs) == dictionary(["a" => 2, "b" => 1, "c" => 0])
+    # probably no way to extract levels:
+    @test groupmap(x -> x.a, length, StructArray(;a=a[1:0])) |> isempty
+    @test groupmap((@o (_.a, _.b)), length, StructArray(a=a[1:2], b=a[2:3])) == dictionary([("a", "a") => 1, ("a", "b") => 1])
 end
 
 @testitem "keyedarray" begin
