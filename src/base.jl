@@ -75,8 +75,7 @@ function _group(f::F, X, ::Type{RT}) where {F, RT <: BASERESTYPES}
 end
 
 function _groupmap(f::F, ::typeof(length), X, ::Type{RT}) where {F, RT <: BASERESTYPES}
-    vals = similar(X, Nothing)
-    fill!(vals, nothing)
+    vals = map(Returns(nothing), X)
     (; dct, starts, rperm) = _group_core(f, X, vals, RT)
     @modify(dct |> GroupValues()) do gid
         starts[gid + 1] - starts[gid]

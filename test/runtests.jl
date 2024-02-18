@@ -284,6 +284,9 @@ end
     @test isconcretetype(eltype(g))
     @test valtype(g) <: SubArray{Int}
 
+    @test (@inferred groupmap(length, xs))[15] == 1
+    @test_broken (@inferred groupmap(only, xs))
+
     g = @inferred group(Int∘isodd, (3x for x in [1, 2, 3, 4, 5] if false))
     @test isempty(g)
     @test isconcretetype(eltype(g))
