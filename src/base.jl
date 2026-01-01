@@ -133,10 +133,6 @@ _group_core(f::F, X, vals, dicttype, length) where {F} = _group_core_identity(ma
 #     return out
 # end
 
-if VERSION < v"1.10-"
-    _similar_1based(vals::AbstractArray, len::Integer) = similar(vals, len)
-    _similar_1based(vals, len::Integer) = Vector{_eltype(vals)}(undef, len)
-else
-    # applicable() is compiletime in 1.10+
-    _similar_1based(vals, len::Integer) = applicable(similar, vals, len) ? similar(vals, len) : Vector{_eltype(vals)}(undef, len)
-end
+_similar_1based(vals, len::Integer) =
+    applicable(similar, vals, len) ? similar(vals, len) :
+                                     Vector{_eltype(vals)}(undef, len)
