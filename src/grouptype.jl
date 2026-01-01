@@ -10,8 +10,16 @@ end
 
 const Group{K,VS} = Union{GroupAny{K,VS}, GroupArray{K,<:Any,<:Any,VS}}
 
-_Grouptype(::Type{K}, ::Type{VS}) where {K, VS} = GroupAny{K, VS}
-_Grouptype(::Type{K}, ::Type{VS}) where {K, VS<:AbstractArray} = GroupArray{K, VS}
+@inline _Grouptype(::Type{K}, ::Type{VS}) where {K, VS} =
+    isconcretetype(K) && isconcretetype(VS) ? GroupAny{K, VS} :
+    isconcretetype(K) ? GroupAny{K, <:VS} :
+    isconcretetype(VS) ? GroupAny{<:K, VS} :
+    GroupAny{<:K, <:VS}
+@inline _Grouptype(::Type{K}, ::Type{VS}) where {K, T, N, VS<:AbstractArray{T,N}} =
+    isconcretetype(K) && isconcretetype(VS) ? GroupArray{K, T, N, VS} :
+    isconcretetype(K) ? GroupArray{K, <:T, N, <:VS} :
+    isconcretetype(VS) ? GroupArray{<:K, T, N, VS} :
+    GroupArray{<:K, <:T, N, <:VS}
 
 Group(key, value) = GroupAny(key, value)
 Group(key, value::AbstractArray) = GroupArray(key, value)

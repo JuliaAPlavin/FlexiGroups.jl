@@ -176,11 +176,17 @@ end
     @test key(first(g)) === 1
     @test values(first(g))::SubArray{Int} == [3, 9, 15]
     @test isconcretetype(eltype(g))
+    @test eltype(g) <: Group{Int, <:SubArray{Int}}
     @test g isa Vector{<:Group{Int, <:SubArray{Int}}}
 
     g = @inferred groupmap_vg(x->isodd(x) ? 1 : 0, length, xs)
     @test g == [Group(1, 3), Group(0, 2)]
     @test isconcretetype(eltype(g))
+    @test eltype(g) == FlexiGroups.GroupAny{Int, Int}
+
+    g = groupmap_vg(x->isodd(x) ? "1" : 0, length, xs)
+    @test g == [Group("1", 3), Group(0, 2)]
+    @test eltype(g) == FlexiGroups.GroupAny{<:Any, Int}
 
     g = map(group_vg(x -> (o=isodd(x),), xs)) do gr
         (; key(gr)..., cnt=length(values(gr)), tot=sum(values(gr)))
