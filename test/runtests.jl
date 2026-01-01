@@ -154,7 +154,7 @@ end
     @test key(first(g)) === true
     @test values(first(g)).x::SubArray{Int} == [3, 9, 15]
     @test isconcretetype(eltype(g))
-    @test g isa Vector{<:Group{Bool, <:StructArray}}
+    @test g isa StructVector{<:Group{Bool, <:StructArray}}
 
     gr = first(g)
     @test gr == gr

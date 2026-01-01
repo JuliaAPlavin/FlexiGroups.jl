@@ -10,6 +10,9 @@ end
 
 const Group{K,VS} = Union{GroupAny{K,VS}, GroupArray{K,<:Any,<:Any,VS}}
 
+_Grouptype(::Type{K}, ::Type{VS}) where {K, VS} = GroupAny{K, VS}
+_Grouptype(::Type{K}, ::Type{VS}) where {K, VS<:AbstractArray} = GroupArray{K, VS}
+
 Group(key, value) = GroupAny(key, value)
 Group(key, value::AbstractArray) = GroupArray(key, value)
 AccessorsExtra.constructorof(::Type{<:Group}) = Group
@@ -44,15 +47,16 @@ Base.:(==)(a::Group, b::Group) = key(a) == key(b) && value(a) == value(b)
 Base.:(==)(a::Group, b::AbstractArray) = error("Cannot compare Group with $(typeof(b))")
 Base.:(==)(a::AbstractArray, b::Group) = error("Cannot compare Group with $(typeof(a))")
 
-group_vg(args...; kwargs...) = group(args...; kwargs..., restype=Vector{Group})
-groupview_vg(args...; kwargs...) = groupview(args...; kwargs..., restype=Vector{Group})
-groupfind_vg(args...; kwargs...) = groupfind(args...; kwargs..., restype=Vector{Group})
-groupmap_vg(args...; kwargs...) = groupmap(args...; kwargs..., restype=Vector{Group})
+group_vg(args...; kwargs...) = group(args...; kwargs..., restype=AbstractVector{Group})
+groupview_vg(args...; kwargs...) = groupview(args...; kwargs..., restype=AbstractVector{Group})
+groupfind_vg(args...; kwargs...) = groupfind(args...; kwargs..., restype=AbstractVector{Group})
+groupmap_vg(args...; kwargs...) = groupmap(args...; kwargs..., restype=AbstractVector{Group})
 
-function _group_core_identity(X, vals, ::Type{Vector{Group}}, len)
+function _group_core_identity(X, vals, ::Type{AbstractVector{Group}}, len)
     (; dct, starts, rperm) = _group_core_identity(X, vals, AbstractDictionary, len)
-    grs = @p dct |> pairs |> map() do (k, gid)
-        Group(k, gid)
-    end |> collect
-    (; dct=grs, starts, rperm)
+    result = similar(vals, _Grouptype(keytype(dct), valtype(dct)), length(dct))
+    for (i, (k, gid)) in zip(eachindex(result), pairs(dct))
+        @inbounds result[i] = Group(k, gid)
+    end
+    (; dct=result, starts, rperm)
 end
