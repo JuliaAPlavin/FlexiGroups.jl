@@ -10,17 +10,6 @@ end
 
 const Group{K,VS} = Union{GroupAny{K,VS}, GroupArray{K,<:Any,<:Any,VS}}
 
-@inline _Grouptype(::Type{K}, ::Type{VS}) where {K, VS} =
-    isconcretetype(K) && isconcretetype(VS) ? GroupAny{K, VS} :
-    isconcretetype(K) ? GroupAny{K, <:VS} :
-    isconcretetype(VS) ? GroupAny{<:K, VS} :
-    GroupAny{<:K, <:VS}
-@inline _Grouptype(::Type{K}, ::Type{VS}) where {K, T, N, VS<:AbstractArray{T,N}} =
-    isconcretetype(K) && isconcretetype(VS) ? GroupArray{K, T, N, VS} :
-    isconcretetype(K) ? GroupArray{K, <:T, N, <:VS} :
-    isconcretetype(VS) ? GroupArray{<:K, T, N, VS} :
-    GroupArray{<:K, <:T, N, <:VS}
-
 Group(key, value) = GroupAny(key, value)
 Group(key, value::AbstractArray) = GroupArray(key, value)
 AccessorsExtra.constructorof(::Type{<:Group}) = Group
@@ -62,9 +51,10 @@ groupmap_vg(args...; kwargs...) = groupmap(args...; kwargs..., restype=AbstractV
 
 function _group_core_identity(X, vals, ::Type{AbstractVector{Group}}, len)
     (; dct, starts, rperm) = _group_core_identity(X, vals, AbstractDictionary, len)
-    result = similar(vals, _Grouptype(keytype(dct), valtype(dct)), length(dct))
-    for (i, (k, gid)) in zip(eachindex(result), pairs(dct))
-        @inbounds result[i] = Group(k, gid)
-    end
-    (; dct=result, starts, rperm)
+    grs = @p dct |> pairs |> Broadcast.broadcasted() do (k, gid)
+        Group(k, gid)
+    end |> _materialize_f(vals)
+    (; dct=grs, starts, rperm)
 end
+
+_materialize_f(_, x) = collect(x)
