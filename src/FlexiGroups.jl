@@ -8,7 +8,9 @@ using AccessorsExtra  # for values()
 
 export
     group, groupview, groupfind, groupmap,
-    group_vg, groupview_vg, groupfind_vg, groupmap_vg, Group, key, value,
+    groups, groupviews, groupfinds, groupmaps,
+    group_vg, groupview_vg, groupfind_vg, groupmap_vg,  # legacy aliases
+    Group, key, value,
     addmargins, MultiGroup, total
 
 include("base.jl")

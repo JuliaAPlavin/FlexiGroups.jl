@@ -44,10 +44,16 @@ Base.:(==)(a::Group, b::Group) = key(a) == key(b) && value(a) == value(b)
 Base.:(==)(a::Group, b::AbstractArray) = error("Cannot compare Group with $(typeof(b))")
 Base.:(==)(a::AbstractArray, b::Group) = error("Cannot compare Group with $(typeof(a))")
 
-group_vg(args...; kwargs...) = group(args...; kwargs..., into=AbstractVector{Group})
-groupview_vg(args...; kwargs...) = groupview(args...; kwargs..., into=AbstractVector{Group})
-groupfind_vg(args...; kwargs...) = groupfind(args...; kwargs..., into=AbstractVector{Group})
-groupmap_vg(args...; kwargs...) = groupmap(args...; kwargs..., into=AbstractVector{Group})
+groups(args...) = group(args...; into=AbstractVector{Group})
+groupviews(args...) = groupview(args...; into=AbstractVector{Group})
+groupfinds(args...) = groupfind(args...; into=AbstractVector{Group})
+groupmaps(args...) = groupmap(args...; into=AbstractVector{Group})
+
+# legacy aliases — undocumented, kept for backward compatibility
+const group_vg = groups
+const groupview_vg = groupviews
+const groupfind_vg = groupfinds
+const groupmap_vg = groupmaps
 
 function _group_core_identity(X, vals, ::Type{AbstractVector{Group}}, len)
     (; dct, starts, rperm) = _group_core_identity(X, vals, AbstractDictionary, len)
