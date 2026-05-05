@@ -6,11 +6,11 @@ The main principle of `FlexiGroups` is that the result of a grouping operation i
 
 ## `group`/`groupview`/`groupmap`
 
-`group([keyf=identity], X; [restype=Dictionary])`: group elements of `X` by `keyf(x)`, returning a mapping `keyf(x)` values to lists of `x` values in each group.
+`group([keyf=identity], X; [into=Dictionary])`: group elements of `X` by `keyf(x)`, returning a mapping `keyf(x)` values to lists of `x` values in each group.
 
 The result is an (ordered) `Dictionary` by default, but can be changed to the base `Dict` or another dictionary type.
 
-Alternatively to dictionaries, specifying `restype=KeyedArray` (from `AxisKeys.jl`) results in a `KeyedArray`. Its `axiskeys` are the group keys.
+Alternatively to dictionaries, specifying `into=KeyedArray` (from `AxisKeys.jl`) results in a `KeyedArray`. Its `axiskeys` are the group keys.
 
 ```julia
 xs = 3 .* [1, 2, 3, 4, 5]
@@ -18,13 +18,13 @@ g = group(isodd, xs)
 # g == dictionary([true => [3, 9, 15], false => [6, 12]]) from Dictionaries.jl
 
 
-g = group(x -> (a=isodd(x),), xs; restype=KeyedArray)
+g = group(x -> (a=isodd(x),), xs; into=KeyedArray)
 # g == KeyedArray([[6, 12], [3, 9, 15]]; a=[false, true])
 ```
 
-`groupview([keyf=identity], X; [restype=Dictionary])`: like the `group` function, but each group is a `view` of `X` and doesn't copy the input elements.
+`groupview([keyf=identity], X; [into=Dictionary])`: like the `group` function, but each group is a `view` of `X` and doesn't copy the input elements.
 
-`groupmap([keyf=identity], mapf, X; [restype=Dictionary])`: like `map(mapf, group(keyf, X))`, but more efficient. Supports a limited set of `mapf` functions: `length`, `first`/`last`, `only`, `rand`.
+`groupmap([keyf=identity], mapf, X; [into=Dictionary])`: like `map(mapf, group(keyf, X))`, but more efficient. Supports a limited set of `mapf` functions: `length`, `first`/`last`, `only`, `rand`.
 
 # Margins
 
@@ -137,7 +137,7 @@ julia> x = @p rand(1:100, 100) |> map((value=_, mod3=_ % 3, mod5=_ % 5)) |> Stru
 
 # compute sum of `value`s grouped by `mod3` and `mod5`
 julia> @p x |>
-       group((; _.mod3, _.mod5); restype=KeyedArray) |>
+       group((; _.mod3, _.mod5); into=KeyedArray) |>
        map(sum(_.value))
 2-dimensional KeyedArray(NamedDimsArray(...)) with keys:
 ↓   mod3 ∈ 3-element Vector{Int64}

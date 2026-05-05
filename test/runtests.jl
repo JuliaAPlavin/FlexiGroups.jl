@@ -106,19 +106,19 @@ end
     using OffsetArrays
     
     xs = [1, 2, 1, 1, 3]
-    g = group(identity, xs, restype=Vector)
+    g = group(identity, xs, into=Vector)
     @test g == [[1, 1, 1], [2], [3]]
 
-    g = group(x -> isodd(x) ? 2 : 1, xs, restype=Vector)
+    g = group(x -> isodd(x) ? 2 : 1, xs, into=Vector)
     @test g == [[2], [1, 1, 1, 3]]
-    
-    @test groupmap(x -> isodd(x) ? 2 : 1, length, xs, restype=Vector) == [1, 4]
-    @test groupmap(identity, length, xs, restype=Vector) == [3, 1, 1]
-    @test groupmap(identity, length, 3 .* xs, restype=Vector) == [0, 0, 3, 0, 0, 1, 0, 0, 1]
-    @test group(identity, 3 .* xs, restype=Vector) == [[], [], [3, 3, 3], [], [], [6], [], [], [9]]
 
-    @test_throws AssertionError group(Int ∘ isodd, xs, restype=Vector)
-    g = group(Int ∘ isodd, xs, restype=OffsetVector)
+    @test groupmap(x -> isodd(x) ? 2 : 1, length, xs, into=Vector) == [1, 4]
+    @test groupmap(identity, length, xs, into=Vector) == [3, 1, 1]
+    @test groupmap(identity, length, 3 .* xs, into=Vector) == [0, 0, 3, 0, 0, 1, 0, 0, 1]
+    @test group(identity, 3 .* xs, into=Vector) == [[], [], [3, 3, 3], [], [], [6], [], [], [9]]
+
+    @test_throws AssertionError group(Int ∘ isodd, xs, into=Vector)
+    g = group(Int ∘ isodd, xs, into=OffsetVector)
     @test axes(g, 1) == 0:1
     @test g[0] == [2]
     @test g == OffsetArray([[2], [1, 1, 1, 3]], 0:1)
@@ -277,19 +277,19 @@ end
 
     xs = 3 .* [1, 2, 3, 4, 5]
 
-    g = group(x -> (isodd(x),), xs; restype=KeyedArray)
+    g = group(x -> (isodd(x),), xs; into=KeyedArray)
     @test @inferred(FlexiGroups._group(x -> (isodd(x),), xs, KeyedArray)) == g
     @test g == KeyedArray([[6, 12], [3, 9, 15]], ([false, true],))
 
-    g = group(x -> (a=isodd(x),), xs; restype=KeyedArray)
+    g = group(x -> (a=isodd(x),), xs; into=KeyedArray)
     @test @inferred(FlexiGroups._group(x -> (a=isodd(x),), xs, KeyedArray)) == g
     @test g == KeyedArray([[6, 12], [3, 9, 15]]; a=[false, true])
 
-    gl = groupmap(x -> (a=isodd(x),), length, xs; restype=KeyedArray)
+    gl = groupmap(x -> (a=isodd(x),), length, xs; into=KeyedArray)
     @test @inferred(FlexiGroups._groupmap(x -> (a=isodd(x),), length, xs, KeyedArray)) == gl
     @test gl == map(length, g) == KeyedArray([2, 3]; a=[false, true])
 
-    gl = groupmap(x -> (a=isodd(x), b=x == 6), length, xs; restype=KeyedArray, default=0)
+    gl = groupmap(x -> (a=isodd(x), b=x == 6), length, xs; into=KeyedArray, default=0)
     @test gl == KeyedArray([1 1; 3 0]; a=[false, true], b=[false, true])
 
     @test addmargins(g) == KeyedArray([[6, 12], [3, 9, 15], [6, 12, 3, 9, 15]]; a=[false, true, total])
@@ -339,10 +339,10 @@ end
     using Dictionaries
 
     @testset for D in [Dict, Dictionary, UnorderedDictionary, ArrayDictionary, AbstractDict, AbstractDictionary]
-        @test group(isodd, 3 .* [1, 2, 3, 4, 5]; restype=D)::D |> pairs |> Dict == Dict(false => [6, 12], true => [3, 9, 15])
-        @test group(isodd, (3x for x in [1, 2, 3, 4, 5]); restype=D)::D |> pairs |> Dict == Dict(false => [6, 12], true => [3, 9, 15])
-        @test @inferred(FlexiGroups._group(isodd, 3 .* [1, 2, 3, 4, 5], D))::D == group(isodd, 3 .* [1, 2, 3, 4, 5]; restype=D)
-        @test @inferred(FlexiGroups._group(isodd, (3x for x in [1, 2, 3, 4, 5]), D))::D == group(isodd, (3x for x in [1, 2, 3, 4, 5]); restype=D)
+        @test group(isodd, 3 .* [1, 2, 3, 4, 5]; into=D)::D |> pairs |> Dict == Dict(false => [6, 12], true => [3, 9, 15])
+        @test group(isodd, (3x for x in [1, 2, 3, 4, 5]); into=D)::D |> pairs |> Dict == Dict(false => [6, 12], true => [3, 9, 15])
+        @test @inferred(FlexiGroups._group(isodd, 3 .* [1, 2, 3, 4, 5], D))::D == group(isodd, 3 .* [1, 2, 3, 4, 5]; into=D)
+        @test @inferred(FlexiGroups._group(isodd, (3x for x in [1, 2, 3, 4, 5]), D))::D == group(isodd, (3x for x in [1, 2, 3, 4, 5]); into=D)
     end
 end
 
