@@ -4,27 +4,44 @@ Arrange tabular or non-tabular datasets into groups according to a specified key
 
 The main principle of `FlexiGroups` is that the result of a grouping operation is always a collection of groups, and each group is a collection of elements. Groups are typically indexed by the grouping key.
 
-## `group`/`groupview`/`groupmap`
+## Two families: lookup vs sequence
 
-`group([keyf=identity], X; [into=Dictionary])`: group elements of `X` by `keyf(x)`, returning a mapping `keyf(x)` values to lists of `x` values in each group.
+The eight grouping functions form a 4×2 grid: four operations crossed with two output shapes.
 
-The result is an (ordered) `Dictionary` by default, but can be changed to the base `Dict` or another dictionary type.
+| Operation | Lookup form (key-indexed)              | Sequence form (`Vector{Group}`) |
+|-----------|----------------------------------------|---------------------------------|
+| Group     | `group(keyf, X)`                       | `groups(keyf, X)`               |
+| View      | `groupview(keyf, X)`                   | `groupviews(keyf, X)`           |
+| Indices   | `groupfind(keyf, X)`                   | `groupfinds(keyf, X)`           |
+| Reduce    | `groupmap(keyf, mapf, X)`              | `groupmaps(keyf, mapf, X)`      |
 
-Alternatively to dictionaries, specifying `into=KeyedArray` (from `AxisKeys.jl`) results in a `KeyedArray`. Its `axiskeys` are the group keys.
+The **lookup form** returns a `Dictionary` (default) you index by group key: `g[k]`. The **sequence form** returns a `Vector{Group}` (or `StructVector{Group}` when the input is a `StructArray`) where each element bundles its key — useful for flatmap-style pipelines and tabular workflows.
 
 ```julia
 xs = 3 .* [1, 2, 3, 4, 5]
 g = group(isodd, xs)
 # g == dictionary([true => [3, 9, 15], false => [6, 12]]) from Dictionaries.jl
 
+gs = groups(isodd, xs)
+# gs == [Group(true, [3, 9, 15]), Group(false, [6, 12])]
+```
 
+The lookup form accepts an `into=` keyword to switch storage:
+
+| `into=`         | Result                                | Constraint on key                |
+|-----------------|---------------------------------------|----------------------------------|
+| `Dictionary`    | ordered Dictionaries.jl `Dictionary`  | any                              |
+| `Dict`          | base hashmap                          | any                              |
+| `KeyedArray`    | N-D axis-keyed array (AxisKeys.jl)    | `NamedTuple` or `Tuple`          |
+| `Vector`        | dense 1-D positional                  | `Int`, dense from `1`            |
+| `OffsetVector`  | dense 1-D positional, offset          | contiguous `Int` range           |
+
+```julia
 g = group(x -> (a=isodd(x),), xs; into=KeyedArray)
 # g == KeyedArray([[6, 12], [3, 9, 15]]; a=[false, true])
 ```
 
-`groupview([keyf=identity], X; [into=Dictionary])`: like the `group` function, but each group is a `view` of `X` and doesn't copy the input elements.
-
-`groupmap([keyf=identity], mapf, X; [into=Dictionary])`: like `map(mapf, group(keyf, X))`, but more efficient. Supports a limited set of `mapf` functions: `length`, `first`/`last`, `only`, `rand`.
+`groupmap(keyf, mapf, X)` is `map(mapf, group(keyf, X))` fused. It supports a limited set of `mapf` functions: `length`, `first`, `last`, `only`, `rand`. For arbitrary `mapf`, use `map(mapf, groupview(keyf, X))` — efficient because `groupview` returns `SubArray`s.
 
 # Margins
 
