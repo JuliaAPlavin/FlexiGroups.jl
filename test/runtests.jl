@@ -149,7 +149,7 @@ end
     using StructArrays
 
     xs = StructArray(x=3 .* [1, 2, 3, 4, 5])
-    g = @inferred group_vg(x->isodd(x.x), xs)
+    g = @inferred groups(x->isodd(x.x), xs)
     @test length(g) == 2
     @test key(first(g)) === true
     @test values(first(g)).x::SubArray{Int} == [3, 9, 15]
@@ -171,7 +171,7 @@ end
     @test (@set key(gr) = 1.23) == Group(1.23, [(x=3,), (x=9,), (x=15,)])
 
     xs = 3 .* [1, 2, 3, 4, 5]
-    g = @inferred group_vg(x->isodd(x) ? 1 : 0, xs)
+    g = @inferred groups(x->isodd(x) ? 1 : 0, xs)
     @test length(g) == 2
     @test key(first(g)) === 1
     @test values(first(g))::SubArray{Int} == [3, 9, 15]
@@ -179,16 +179,16 @@ end
     @test eltype(g) <: Group{Int, <:SubArray{Int}}
     @test g isa Vector{<:Group{Int, <:SubArray{Int}}}
 
-    g = @inferred groupmap_vg(x->isodd(x) ? 1 : 0, length, xs)
+    g = @inferred groupmaps(x->isodd(x) ? 1 : 0, length, xs)
     @test g == [Group(1, 3), Group(0, 2)]
     @test isconcretetype(eltype(g))
     @test eltype(g) == FlexiGroups.GroupAny{Int, Int}
 
-    g = groupmap_vg(x->isodd(x) ? "1" : 0, length, xs)
+    g = groupmaps(x->isodd(x) ? "1" : 0, length, xs)
     @test g == [Group("1", 3), Group(0, 2)]
     @test eltype(g) == FlexiGroups.GroupAny{<:Any, Int}
 
-    g = map(group_vg(x -> (o=isodd(x),), xs)) do gr
+    g = map(groups(x -> (o=isodd(x),), xs)) do gr
         (; key(gr)..., cnt=length(values(gr)), tot=sum(values(gr)))
     end
     @test g == [(o=true, cnt=3, tot=27), (o=false, cnt=2, tot=18)]
@@ -529,6 +529,20 @@ end
     g = groupfind(isodd, skip(isnan, [1, 2, NaN, 3]))
     @test g == dictionary([true => [1, 4], false => [2]])
     @test g isa AbstractDictionary{Bool, <:SubArray{Int}}
+end
+
+@testitem "back-compat aliases" begin
+    xs = 3 .* [1, 2, 3, 4, 5]
+
+    @test group_vg(isodd, xs) == groups(isodd, xs)
+    @test groupview_vg(isodd, xs) == groupviews(isodd, xs)
+    @test groupfind_vg(isodd, xs) == groupfinds(isodd, xs)
+    @test groupmap_vg(isodd, length, xs) == groupmaps(isodd, length, xs)
+
+    @test group_vg === groups
+    @test groupview_vg === groupviews
+    @test groupfind_vg === groupfinds
+    @test groupmap_vg === groupmaps
 end
 
 @testitem "_" begin
